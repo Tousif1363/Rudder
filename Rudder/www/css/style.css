@@ -1,0 +1,556 @@
+/* Empty. Add your own CSS if you like */
+
+/* allows the bar-footer to be elastic /*
+/* optionally set a max-height */
+/* maxlength on the textarea will prevent /*
+/* it from getting too large also */
+.bar-footer {
+  overflow: visible !important;
+}
+
+.bar-footer textarea {
+  resize: none;
+  height: 25px;
+}
+
+/* fixes an ios bug bear */
+button.ion-android-send {
+  padding-top: 2px;
+}
+
+/* add this to keep your footer buttons down
+at the bottom as the textarea resizes */
+.footer-btn-wrap {
+  position: relative;
+  height: 100%;
+  width: 50px;
+  top: 7px;
+}
+
+.footer-btn {
+  position: absolute !important;
+  bottom: 0;
+}
+
+img.profile-pic {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  position: absolute;
+  bottom: 10px;
+}
+
+img.profile-pic.left {
+  left: 10px;
+}
+
+img.profile-pic.right {
+  right: 10px;
+}
+
+.ion-email {
+  float: right;
+  font-size: 32px;
+  vertical-align: middle;
+}
+
+.message {
+  font-size: 14px;
+}
+
+.message-detail {
+  white-space: nowrap;
+  font-size: 14px;
+}
+
+.bar.item-input-inset .item-input-wrapper input {
+  width: 100% !important;
+}
+
+.message-wrapper {
+  position: relative;
+}
+
+.message-wrapper:last-child {
+  margin-bottom: 10px;
+}
+
+.chat-bubble {
+  border-radius: 5px;
+  display: inline-block;
+  padding: 10px 18px;
+  position: relative;
+  margin: 10px;
+  max-width: 80%;
+}
+
+.chat-bubble:before {
+  content: "\00a0";
+  display: block;
+  height: 16px;
+  width: 9px;
+  position: absolute;
+  bottom: -7.5px;
+}
+
+.chat-bubble.left {
+  background-color: #e6e5eb;
+  float: left;
+  margin-left: 55px;
+}
+
+.chat-bubble.left:before {
+  background-color: #e6e5eb;
+  left: 10px;
+  -webkit-transform: rotate(70deg) skew(5deg);
+}
+
+.chat-bubble.right {
+  background-color: #158ffe;
+  color: #fff;
+  float: right;
+  margin-right: 55px;
+}
+
+.chat-bubble.right:before {
+  background-color: #158ffe;
+  right: 10px;
+  -webkit-transform: rotate(118deg) skew(-5deg);
+}
+
+.chat-bubble.right a.autolinker {
+  color: #fff;
+  font-weight: bold;
+}
+
+.user-messages-top-icon {
+  font-size: 28px;
+  display: inline-block;
+  vertical-align: middle;
+  position: relative;
+  top: -3px;
+  right: 5px;
+}
+
+.msg-header-username {
+  display: inline-block;
+  vertical-align: middle;
+  position: relative;
+  top: -3px;
+}
+
+input, textarea, .item-input, .item-input-wrapper {
+  background-color: #f4f4f4 !important;
+  width :100%;
+}
+
+.bold {
+  font-weight: bold;
+}
+
+.cf {
+  clear: both !important;
+}
+
+a.autolinker {
+  color: #3b88c3;
+  text-decoration: none;
+}
+
+/* loading */
+.loader-center {
+  height: 100%;
+  display: -webkit-box;
+  display: -moz-box;
+  display: -ms-flexbox;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-box-direction: normal;
+  -moz-box-direction: normal;
+  -webkit-box-orient: horizontal;
+  -moz-box-orient: horizontal;
+  -webkit-flex-direction: row;
+  -ms-flex-direction: row;
+  flex-direction: row;
+  -webkit-flex-wrap: nowrap;
+  -ms-flex-wrap: nowrap;
+  flex-wrap: nowrap;
+  -webkit-box-pack: center;
+  -moz-box-pack: center;
+  -webkit-justify-content: center;
+  -ms-flex-pack: center;
+  justify-content: center;
+  -webkit-align-content: stretch;
+  -ms-flex-line-pack: stretch;
+  align-content: stretch;
+  -webkit-box-align: center;
+  -moz-box-align: center;
+  -webkit-align-items: center;
+  -ms-flex-align: center;
+  align-items: center;
+}
+
+.loader .ion-loading-c {
+  font-size: 64px;
+}
+
+/* Decorators */
+.background-color-ruder {
+  background-color: #20283D !important;
+}
+
+.background-color-grey{
+  background-color: snow !important;
+}
+
+.row-wrap {
+  flex-wrap: wrap;
+  display:-webkit-flex;
+  -webkit-flex-flow: row wrap;
+}
+
+.margin-0 {
+  margin: 0px !important;
+}
+
+.text-align-center {
+  text-align: center;
+}
+
+/* Class Groups */
+.card-guests-detail {
+  border-radius: 6px;
+  box-shadow: 0px 0px 0px rgba(0,0,0,0);
+}
+
+.card-guests-detail h2 {
+  font-size: 14px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.card-guests-detail p {
+  color: #999;
+  font-size: 9px;
+  text-align: center;
+}
+
+.card-guests-detail .item-divider {
+  text-align: left;
+  font-size: 13px;
+  font-weight: 300;
+  border-top: 1px solid #F3F3F3;
+  background-color: #FAFAFA;
+}
+
+.card-guests {
+  border-radius: 6px;
+  box-shadow: 0px 0px 0px rgba(0,0,0,0);
+  background: transparent;
+  border-color: transparent;
+}
+
+.card-guests .item{
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border-color: transparent;
+}
+
+.card-guests h2 {
+  font-size: 14px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.card-guests p {
+  color: #999;
+  font-size: 9px;
+  text-align: center;
+}
+
+.card-guests .item-divider {
+  text-align: left;
+  font-size: 13px;
+  font-weight: 300;
+  border-top: 1px solid #F3F3F3;
+  background-color: #FAFAFA;
+}
+
+.card-profile {
+  margin: 0;
+}
+
+.card-profile h2 {
+  font-size: 15px;
+  font-weight: bold;
+  text-align: center;
+  color: #FFFFFF;
+}
+
+.card-profile .item {
+  background: #283049;
+}
+
+.card-profile p {
+  color: #69717d;
+  text-align: center;
+}
+
+.card-profile .item-divider {
+  text-align: left;
+  font-size: 13px;
+  font-weight: 300;
+  border-top: 1px solid #F3F3F3;
+  background-color: #FAFAFA;
+}
+
+.card-hosts {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border-color: transparent;
+  box-shadow: 0px 0px 0px rgba(0,0,0,0);
+}
+
+.card-hosts .item{
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border-color: transparent;
+}
+
+.card-hosts h2 {
+  font-size: 10px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.card-hosts p {
+  color: #999;
+  text-align: center;
+}
+
+.card-hosts .item-divider {
+  text-align: left;
+  font-size: 13px;
+  font-weight: 300;
+  border-top: 1px solid #F3F3F3;
+  background-color: #FAFAFA;
+}
+
+.icon-change {
+  color : red;
+}
+
+.list-settings .item{
+  background: transparent;
+  border: transparent;
+}
+
+.list-settings .item{
+  background: transparent;
+  border: transparent;
+  color: #FFFFFF;
+}
+
+.profile-picture-main{
+  width: 100%;
+  height: 50%;
+}
+
+.profile-name{
+  color: #FFFFFF;
+  text-align: center;
+}
+
+.profile-title, .profile-caption{
+  color: #69717d;
+  text-align: center;
+}
+
+.lg-red{
+  color: red;
+  font-size: 25px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.md-white{
+  color: #FFFFFF;
+  font-size:15px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.transparent{
+  background: transparent;
+}
+
+.scroll-extend{
+  overflow-y: initial !important;
+}
+
+.custom-placeholder{
+  background: #FFFFFF;
+  z-index: -1;
+  margin: -50px -20px -20px -20px;
+  padding-bottom: 20px;
+}
+
+
+
+.modal{
+  display: block !important;
+}
+
+.modal-dialog{
+  overflow-y: initial !important
+}
+.modal-body{
+  height: auto;
+  overflow-y: scroll;
+}
+
+
+/* Modal animations */
+.animated.modal.bounceIn.ng-leave {
+  -webkit-animation-name:bounceOut;
+  animation-name:bounceOut;
+}
+.animated.modal.bounceInDown.ng-leave {
+  -webkit-animation-name:bounceOutUp;
+  animation-name:bounceOutUp;
+}
+.animated.modal.bounceInLeft.ng-leave {
+  -webkit-animation-name:bounceOutRight; /*modified*/
+  animation-name:bounceOutRight; /*modified*/
+}
+.animated.modal.bounceInRight.ng-leave {
+  -webkit-animation-name:bounceOutLeft; /*modified*/
+  animation-name:bounceOutLeft; /*modified*/
+}
+.animated.modal.bounceInUp.ng-leave {
+  -webkit-animation-name:bounceOutDown;
+  animation-name:bounceOutDown;
+}
+
+.animated.modal.bounceOut.ng-leave {
+  -webkit-animation-name:bounceOut;
+  animation-name:bounceOut;
+}
+
+.animated.modal.fadeIn.ng-leave {
+  -webkit-animation-name:fadeOut;
+  animation-name:fadeOut;
+}
+.animated.modal.fadeInDown.ng-leave {
+  -webkit-animation-name:fadeOutDown;
+  animation-name:fadeOutDown;
+}
+.animated.modal.fadeInDownBig.ng-leave {
+  -webkit-animation-name:fadeOutDownBig;
+  animation-name:fadeOutDownBig;
+}
+.animated.modal.fadeInLeft.ng-leave {
+  -webkit-animation-name:fadeOutLeft;
+  animation-name:fadeOutLeft;
+}
+.animated.modal.fadeInLeftBig.ng-leave {
+  -webkit-animation-name:fadeOutLeftBig;
+  animation-name:fadeOutLeftBig;
+}
+.animated.modal.fadeInRight.ng-leave {
+  -webkit-animation-name:fadeOutRight;
+  animation-name:fadeOutRight;
+}
+.animated.modal.fadeInRightBig.ng-leave {
+  -webkit-animation-name:fadeOutRightBig;
+  animation-name:fadeOutRightBig;
+}
+.animated.modal.fadeInUp.ng-leave {
+  -webkit-animation-name:fadeOutUp;
+  animation-name:fadeOutUp;
+}
+.animated.modal.fadeInUpBig.ng-leave {
+  -webkit-animation-name:fadeOutUpBig;
+  animation-name:fadeOutUpBig;
+}
+
+.animated.modal.flipInX.ng-leave {
+  -webkit-animation-name:flipOutX;
+  animation-name:flipOutX;
+}
+.animated.modal.flipInY.ng-leave {
+  -webkit-animation-name:flipOutY;
+  animation-name:flipOutY;
+}
+
+.animated.modal.lightSpeedIn.ng-leave {
+  -webkit-animation-name:lightSpeedOut;
+  animation-name:lightSpeedOut;
+}
+
+.animated.modal.rotateIn.ng-leave {
+  -webkit-animation-name:rotateOut;
+  animation-name:rotateOut;
+}
+.animated.modal.rotateInDownLeft.ng-leave {
+  -webkit-animation-name:rotateOutDownLeft;
+  animation-name:rotateOutDownLeft;
+}
+.animated.modal.rotateInDownRight.ng-leave {
+  -webkit-animation-name:rotateOutDownRight;
+  animation-name:rotateOutDownRight;
+}
+.animated.modal.rotateInUpLeft.ng-leave {
+  -webkit-animation-name:rotateOutUpLeft;
+  animation-name:rotateOutUpLeft;
+}
+.animated.modal.rotateInUpRight.ng-leave {
+  -webkit-animation-name:rotateOutUpRight;
+  animation-name:rotateOutUpRight;
+}
+
+.animated.modal.slideInUp.ng-leave {
+  -webkit-animation-name:fadeOut; /*modified*/
+  animation-name:fadeOut; /*modified*/
+}
+.animated.modal.slideInDown.ng-leave {
+  -webkit-animation-name:slideOutUp;
+  animation-name:slideOutUp;
+}
+.animated.modal.slideInLeft.ng-leave {
+  -webkit-animation-name:slideOutLeft;
+  animation-name:slideOutLeft;
+}
+.animated.modal.slideInRight.ng-leave {
+  -webkit-animation-name:slideOutRight;
+  animation-name:slideOutRight;
+}
+
+.animated.modal.zoomIn.ng-leave {
+  -webkit-animation-name:zoomOut;
+  animation-name:zoomOut;
+}
+.animated.modal.zoomInDown.ng-leave {
+  -webkit-animation-name:zoomOutDown;
+  animation-name:zoomOutDown;
+}
+.animated.modal.zoomInLeft.ng-leave {
+  -webkit-animation-name:zoomOutLeft;
+  animation-name:zoomOutLeft;
+}
+.animated.modal.zoomInRight.ng-leave {
+  -webkit-animation-name:zoomOutRight;
+  animation-name:zoomOutRight;
+}
+.animated.modal.zoomInUp.ng-leave {
+  -webkit-animation-name:zoomOutUp;
+  animation-name:zoomOutUp;
+}
+
+.animated.modal.rollIn.ng-leave {
+  -webkit-animation-name:rollOut;
+  animation-name:rollOut;
+}
