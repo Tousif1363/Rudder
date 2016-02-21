@@ -24,6 +24,7 @@
   <script src="//cdnjs.cloudflare.com/ajax/libs/angular-moment/0.8.2/angular-moment.min.js"></script>
   <!-- cordova script (this will be a 404 during development) -->
   <script src="cordova.js"></script>
+  <!-- For GPS location-->
   <script src="js/ng-cordova.min.js"></script>
 
 
@@ -145,19 +146,19 @@
     <ion-content scroll="false">
       <div class="top-content row">
         <div class="app-copy col col-top">
-          <h1 class="app-logo">Rudder App Launcher</h1>
+          <h1 class="app-logo">Rudder</h1>
           <p class="app-tagline">
-            Yaha logo ayega
+            >>Connect<<
           </p>
         </div>
       </div>
-      <div class="bottom-content row">
-        <div class="col col-bottom">
-          <a class="facebook-sign-in button button-block" ng-click="checkUserLoginStatus()">
-            Log in with Facebook
-          </a>
-        </div>
-      </div>
+      <!--<div class="bottom-content row">-->
+        <!--<div class="col col-bottom">-->
+          <!--<a class="facebook-sign-in button button-block" ng-click="checkUserLoginStatus()">-->
+            <!--Log in with Facebook-->
+          <!--</a>-->
+        <!--</div>-->
+      <!--</div>-->
     </ion-content>
   </ion-view>
 </script>
@@ -186,14 +187,15 @@
 
 <script id="discover.html" type="text/ng-template">
   <ion-view view-title="Discover Events" class="background-color-grey">
-    <ion-header-bar class="bar-royal bar-subheader item-input-inset" position-bars-and-content>
-      <label class="item-input-wrapper">
-        <i class="icon ion-ios-search placeholder-icon"></i>
-        <input type="search" placeholder="Search">
-      </label>
-    </ion-header-bar>
-    <ion-content class="padding has-header has-subheader has-tabs-top">
+    <!--<ion-header-bar class="bar-royal bar-subheader item-input-inset" position-bars-and-content>-->
+      <!--<label class="item-input-wrapper">-->
+        <!--<i class="icon ion-ios-search placeholder-icon"></i>-->
+        <!--<input type="search" placeholder="Search">-->
+      <!--</label>-->
+    <!--</ion-header-bar>-->
+    <ion-content class="padding has-header has-tabs-top">
       <ion-list ng-controller="EventsCtrl">
+        <!--<i class="icon ion-beer" ng-if="jQuery.isEmptyObject($scope.items)"></i>-->
         <ion-item ng-repeat="item in items" class="item item-icon-left" href="#" ng-click="showAlert($index)">
           <i class="icon ion-beer" ng-if="item.category === 'pub'"></i>
           <i class="icon ion-coffee" ng-if="item.category === 'cafe'"></i>
@@ -310,9 +312,9 @@
 
 <script id="event-popup.html" type="text/ng-template">
   <ion-header-bar class="bar bar-header bar-stable">
-    <h1 class="title" ng-bind="items[index].eventName"></h1>
+    <h1 class="title" ng-bind="items[index].name"></h1>
   </ion-header-bar>
-  <br>
+  <!-- <br>
   <h5 class="popup-sub-title">HOSTS</h5>
   <div class="row row-wrap">
     <div class="col col-20" ng-repeat="item in hosts">
@@ -348,7 +350,7 @@
         <input type="password" maxlength="1">
       </label>
     </div>
-  </div>
+  </div> -->
 </script>
 
 
@@ -362,10 +364,10 @@
     </ion-header-bar>
     <ion-content class="padding">
       <div class="list">
-        <a class="item item-avatar" href="#/menu/tabs/UserMessages" ng-repeat="item in chatList">
+        <a class="item item-avatar" ui-sref="menu.tabs.chat({id : item.id})" ng-repeat="item in chatList">
           <img src="img/avatar.jpg">
-          <h2 ng-bind="item.friendName"></h2>
-          <p ng-bind="item.lastMsg"></p>
+          <h2 ng-bind="item.name"></h2>
+          <!--<p ng-bind="item.lastMsg"></p>-->
         </a>
       </div>
     </ion-content>
@@ -384,8 +386,8 @@
   </ion-view>
 </script>
 
-<script id="UserMessages.html" type="text/ng-template">
-  <ion-view id="userMessagesView"
+<script id="chat.html" type="text/ng-template">
+  <ion-view id="chatView"
             cache-view="false"
             view-title="<i class='icon ion-chatbubble user-messages-top-icon'></i> <div class='msg-header-username'>{{toUser.username}}</div>">
 

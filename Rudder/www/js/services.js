@@ -1,6 +1,88 @@
 angular.module('services', [])
 
-  .service('LoginService', function ($http, $state, $q, $ionicLoading, TokenService, UserService, EventsService, $cordovaGeolocation) {
+  .factory('Socket',['socketFactory', function(socketFactory){
+    //Create socket and connect to the chat server
+    var myIoSocket = io.connect('http://192.168.1.111:3000/message');
+
+    mySocket = socketFactory({
+      ioSocket: myIoSocket
+    });
+
+    myIoSocket.on('connect', function() {
+      console.log('on connect');
+      myIoSocket.emit('join', {});
+      myIoSocket.on('authenticated', function () {
+        // use the socket as usual
+        console.log('User is authenticated');
+      });
+    })
+
+    return mySocket;
+  }])
+
+  .service('CheckInService',function($http, $state, $ionicLoading, TokenService, EventGuestsDataService){
+    return {
+      checkInEvent : function(placeId){
+
+          console.log('Attempting check in ');
+          console.log('Place id is :', placeId);
+
+          //Show the loader till the check is complete or fails
+          $ionicLoading.show({
+            template: '<ion-spinner icon="lines" class="spinner-royal"></ion-spinner>'
+          });
+
+          //setting the headers to be passed
+          var config = {
+            headers : {
+              'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8;'
+            }
+          } ;
+
+          //Ruder token
+          var token = TokenService.getUserToken();
+          var placeId = placeId;
+
+          //Form the data to be sent to the server
+          var data = {
+            rudertoken : token.rudertoken,
+            placeId : placeId
+          };
+
+          console.log('Data sent to checkin',data);
+
+          //Notify the server for user check in
+          $http.post('http://192.168.1.111:8080/placefinder/checkin ', data)
+            .success(function(data, status, headers, config) {
+              if(data.hasOwnProperty('success') && data.success === true){
+                console.log('check in success', data);
+                if(data.hasOwnProperty('usersList')){
+                  //Set the data in EventGuestsDataService
+                  EventGuestsDataService.setEventGuestsData(data.usersList);
+
+                  //switch to event details screen , where checkedIn users list is displayed
+                  $state.go('menu.tabs.eventDetails');
+                }
+              }
+
+              $ionicLoading.hide();
+
+            })
+            .error(function (data, status, header, config){
+              console.log('checkin Failure', data);
+
+              $ionicLoading.hide();
+
+            });
+
+
+        }
+
+    }
+  })
+
+  .service('LoginService', function ($http, $state, $q, $ionicLoading, TokenService, UserService,
+                                     EventsService, FriendsDataService, $cordovaGeolocation) {
 
 
     //Get nearby places data and show event discovery screen
@@ -58,6 +140,7 @@ angular.module('services', [])
           .error(function (data, status, header, config){
             console.log('nearby places data failure', data);
             $state.go('menu.tabs.discover');
+            EventsService.setEventsData({});
 
             $ionicLoading.hide();
 
@@ -71,12 +154,15 @@ angular.module('services', [])
 
     //This is to notify the server about the user.
     var createFbUser = function () {
-
       console.log('In createFbUser');
       var user = UserService.getUser();
+      if(user !== null){
+
+
 
       var data = {fbid: user.userID, token: user.authResponse, name: user.name, email: user.email};
       var token;
+      var friends;
 
       console.log(data);
 
@@ -97,6 +183,11 @@ angular.module('services', [])
           });
 
           token = TokenService.getUserToken();
+
+          if(data.hasOwnProperty('friends')){
+            friends = data.friends;
+            FriendsDataService.setFriendsData(friends);
+          }
 
           //After the user details are received , fetch the event details
           getNearbyPlaces();
@@ -125,8 +216,12 @@ angular.module('services', [])
             "<hr />headers: " + header +
             "<hr />config: " + config;
           console.log('createfbuser error',data);
+
           TokenService.setUserToken(null);
+          $state.go('menu.tabs.discover');
+
         });
+      }
 
 
     };
@@ -202,7 +297,6 @@ angular.module('services', [])
 
     //This method is executed when the user press the "Login with facebook" button
     var facebookSignIn = function() {
-
       facebookConnectPlugin.getLoginStatus(function(success){
         if(success.status === 'connected'){
           // the user is logged in and has authenticated your app, and response.authResponse supplies
@@ -215,8 +309,7 @@ angular.module('services', [])
 
           console.log('LoginStatus');
 
-          //Notify the server about the user login
-          createFbUser();
+
 
           if(!user.userID)
           {
@@ -236,6 +329,8 @@ angular.module('services', [])
                 //$state.go('menu.tabs.discover');
                 //After the user details are received , fetch the event details
                 //getNearbyPlaces();
+                //Notify the server about the user login
+                createFbUser();
 
 
                 console.log('profile info', profileInfo);
@@ -251,6 +346,8 @@ angular.module('services', [])
             //getNearbyPlaces();
             //$state.go('menu.home');
             //$state.go('menu.tabs.discover');
+            //Notify the server about the user login
+            createFbUser();
 
           }
 
@@ -267,6 +364,10 @@ angular.module('services', [])
           facebookConnectPlugin.login(['email', 'public_profile','user_friends'], fbLoginSuccess, fbLoginError);
         }
       });
+    };
+
+    var initializeData = function(){
+
     };
 
     return {

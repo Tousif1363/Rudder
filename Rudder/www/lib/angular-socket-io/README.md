@@ -8,7 +8,7 @@ based on [this](http://briantford.com/blog/angular-socket-io.html).
 
 1. `bower install angular-socket-io` or [download the zip](https://github.com/btford/angular-socket-io/archive/master.zip).
 2. Make sure the Socket.IO client lib is loaded. It's often served at `/socket.io/socket.io.js`.
-3. Include the `socket.js` script provided by this component into your app.
+3. Include the `SocketFactory.js` script provided by this component into your app.
 4. Add `btford.socket-io` as a module dependency to your app.
 
 

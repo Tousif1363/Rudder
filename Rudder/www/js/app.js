@@ -16,6 +16,20 @@ angular.module('starter', ['ionic', 'controllers', 'services','monospaced.elasti
         StatusBar.styleDefault();
       }
 
+      if(window.Connection) {
+        if(navigator.connection.type == Connection.NONE) {
+          $ionicPopup.confirm({
+              title: 'No Internet Connection',
+              content: 'Sorry, no Internet connectivity detected. Please reconnect and try again.'
+            })
+            .then(function(result) {
+              if(!result) {
+                ionic.Platform.exitApp();
+              }
+            });
+        }
+      }
+
     });
 
     if(UserService.getUser() !== null){
@@ -100,11 +114,11 @@ angular.module('starter', ['ionic', 'controllers', 'services','monospaced.elasti
           }
         }
       })
-      .state('menu.tabs.UserMessages', {
-        url: "/UserMessages",
+      .state('menu.tabs.chat', {
+        url: "/chat/:id",
         views: {
           'chat-tab' :{
-            templateUrl: "UserMessages.html",
+            templateUrl: "chat.html",
             controller : 'UserMessagesCtrl'
           }
         }

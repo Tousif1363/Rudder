@@ -126,8 +126,8 @@ angular.module('controllers', [])
      }]
      ]);*/
 
-    ChatListDataService.setChatListData([{friendName: 'Pritam', lastMsg : 'Hello guys , wassup?'}, {friendName: 'Rakesh', lastMsg : 'App in making?'},
-      {friendName: 'Ved', lastMsg : 'Backend is up'}, {friendName: 'Manasvi', lastMsg : 'I repeat backend is up'}, {friendName: 'Hemant', lastMsg : 'UI le le'}]);
+    /*ChatListDataService.setChatListData([{friendName: 'Pritam', lastMsg : 'Hello guys , wassup?'}, {friendName: 'Rakesh', lastMsg : 'App in making?'},
+      {friendName: 'Ved', lastMsg : 'Backend is up'}, {friendName: 'Manasvi', lastMsg : 'I repeat backend is up'}, {friendName: 'Hemant', lastMsg : 'UI le le'}]);*/
     console.log(EventGuestsDataService.getEventGuestsData());
     console.log(ChatListDataService.getChatListData());
 
@@ -164,8 +164,13 @@ angular.module('controllers', [])
     };
   })
 
-  .controller('EventsCtrl', function($scope, $timeout, $q, $http, $ionicPopup, $state, EventsService, TokenService){
+  .controller('EventsCtrl', function($scope, $timeout, $q, $http, $ionicPopup, $state, EventsService, TokenService, CheckInService){
     $scope.items = EventsService.getEventsData();
+
+
+    console.log(jQuery.isEmptyObject($scope.items));
+    console.log($scope.items);
+
     $scope.index = 0;
     $scope.hosts = [{hostName: 'Tousif'},{hostName: 'Ved'}, {hostName: 'Rakesh'}];
 
@@ -179,18 +184,27 @@ angular.module('controllers', [])
         okType: 'button-assertive', // String (default: 'button-positive'). The type of the OK button.
       });
       alertPopup.then(function(res) {
-        $state.go('menu.tabs.eventDetails');
-        console.log('You wish to join the event :)');
+        if(res){
+          //$state.go('menu.tabs.eventDetails');
+          //console.log($scope.items[index].id);
+          CheckInService.checkInEvent($scope.items[index].id);
+
+          console.log('You wish to join the event :)');
+        }
+        else{
+          console.log('Not interested maybe.');
+        }
       });
     };
   })
 
   .controller('EventDataCtrl', function($scope, $ionicModal, EventGuestsDataService, $q){
     //$scope.lists = EventGuestsDataService.getEventGuestsData();
-    $scope.data = [{guestName : 'Hemant', guestTitle : 'UX/UI designer at Stayglad'},{guestName : 'Tousif',guestTitle : 'HMI developer at Harman'},
+    /*$scope.data = [{guestName : 'Hemant', guestTitle : 'UX/UI designer at Stayglad'},{guestName : 'Tousif',guestTitle : 'HMI developer at Harman'},
       {guestName : 'Ved', guestTitle : 'Big data expert at Oracle'},{guestName : 'Raj', guestTitle : 'Market research Analyst at SBD'},
       {guestName : 'Bhaskar',guestTitle : 'UX/UI designer at Stayglad'},{guestName : 'Manasvi',guestTitle : 'UX/UI designer at Stayglad'},
-      {guestName : 'Rakesh', guestTitle : 'UX/UI designer at Stayglad'},{guestName : 'Pritam',guestTitle : 'UX/UI designer at Stayglad'}];
+      {guestName : 'Rakesh', guestTitle : 'UX/UI designer at Stayglad'},{guestName : 'Pritam',guestTitle : 'UX/UI designer at Stayglad'}];*/
+    $scope.data = EventGuestsDataService.getEventGuestsData();
     $scope.grid = [];
     $scope.numCols = 3;
     $scope.totalRows = Math.ceil(getSize($scope.data) / $scope.numCols);
@@ -346,9 +360,13 @@ angular.module('controllers', [])
     });
   })
 
-  .controller('ChatListDataCtrl', function($scope, ChatListDataService){
-    $scope.chatList = ChatListDataService.getChatListData();
+  .controller('ChatListDataCtrl', function($scope, $state, FriendsDataService){
+    $scope.chatList = FriendsDataService.getFriendsData();
     console.log('Chat List');
+
+    $scope.joinChat = function(id){
+      $state.go('chat',{id: id});
+    };
   })
 
 
@@ -372,11 +390,43 @@ angular.module('controllers', [])
 
   .controller('UserMessagesCtrl', ['$scope', '$rootScope', '$state',
     '$stateParams', 'MockService', '$ionicActionSheet',
-    '$ionicPopup', '$ionicScrollDelegate', '$timeout', '$interval',
+    '$ionicPopup', '$ionicScrollDelegate', '$timeout', '$interval','Socket', 'UserService', 'FriendsDataService',
     function($scope, $rootScope, $state, $stateParams, MockService,
              $ionicActionSheet,
-             $ionicPopup, $ionicScrollDelegate, $timeout, $interval) {
+             $ionicPopup, $ionicScrollDelegate, $timeout, $interval, Socket, UserService, FriendsDataService) {
 
+      console.log('user id is:',$stateParams.id);
+      $scope.userData = UserService.getUser();
+      console.log($scope.userData);
+      $scope.toUserId = $stateParams.id;
+      $scope.friendsData = FriendsDataService.getFriendsData();
+
+      console.log($scope.friendsData);
+      console.log($scope.toUserId);
+
+      for (i = 0; i < $scope.friendsData.length; i++) {
+        if($scope.friendsData[i].id == $scope.toUserId){
+          console.log('Equal found');
+          $scope.toUserData = $scope.friendsData[i];
+          console.log('toUserData', $scope.toUserData);
+        }
+      }
+
+      //Socket.emit('connect',{});
+
+      Socket.on('connect',function(){
+        //Add user called nickname
+        //socket.emit('',’nickname’);
+        console.log('Connected');
+      })
+
+      $scope.$on('locationChangeStart', function(event){
+        Socket.disconnect(true);
+      })
+
+
+
+      /*
       // mock acquiring data via $stateParams
       $scope.toUser = {
         _id: '534b8e5aaa5e7afc1b23e69b',
@@ -389,7 +439,23 @@ angular.module('controllers', [])
         _id: '534b8fb2aa5e7afc1b23e69c',
         pic: 'http://ionicframework.com/img/docs/mcfly.jpg',
         username: 'Marty'
+      };*/
+
+      // toUser data received from the $stateParams
+      $scope.toUser = {
+        _id: $scope.toUserId,
+        pic: 'http://ionicframework.com/img/docs/venkman.jpg',
+        username: $scope.toUserData.name
+      }
+
+      $scope.user = {
+        _id: $scope.userData.userID,
+        pic: 'http://ionicframework.com/img/docs/mcfly.jpg',
+        username: $scope.userData.name
       };
+
+      console.log($scope.user);
+
 
       $scope.input = {
         message: localStorage['userMessage-' + $scope.toUser._id] || ''
@@ -408,8 +474,8 @@ angular.module('controllers', [])
         getMessages();
 
         $timeout(function() {
-          footerBar = document.body.querySelector('#userMessagesView .bar-footer');
-          scroller = document.body.querySelector('#userMessagesView .scroll-content');
+          footerBar = document.body.querySelector('#chatView .bar-footer');
+          scroller = document.body.querySelector('#chatView .scroll-content');
           txtInput = angular.element(footerBar.querySelector('textarea'));
         }, 0);
 

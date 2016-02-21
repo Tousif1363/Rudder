@@ -412,6 +412,34 @@ a.autolinker {
   overflow-y: scroll;
 }
 
+/* Rudder Splash CSS */
+.rudder-view {
+  background-color: #20283D; }
+.rudder-view .top-content {
+  height: 66%; }
+.rudder-view .top-content .app-copy {
+  text-align: center;
+  padding-top: 13vh; }
+.rudder-view .top-content .app-logo {
+  font-size: 60px;
+  font-family: sans-serif;
+  font-weight: 600;
+  color: #FFFFFF;
+  letter-spacing: 8px;
+  text-transform: uppercase; }
+.rudder-view .top-content .app-tagline {
+  font-size: 16px;
+  margin-top: 0px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.95); }
+.rudder-view .bottom-content {
+  height: 34%; }
+.rudder-view .bottom-content .facebook-sign-in {
+  border-radius: 4px;
+  font-weight: 500;
+  color: #FFF;
+  background-color: #294886;
+  border-color: #27447e; }
 
 /* Modal animations */
 .animated.modal.bounceIn.ng-leave {
