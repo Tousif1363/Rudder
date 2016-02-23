@@ -164,15 +164,107 @@ angular.module('controllers', [])
     };
   })
 
-  .controller('EventsCtrl', function($scope, $timeout, $q, $http, $ionicPopup, $state, EventsService, TokenService, CheckInService){
-    $scope.items = EventsService.getEventsData();
+  .controller('EventsCtrl', function($scope, $rootScope, $timeout, $q, $http, $ionicPopup, $state, $cordovaGeolocation, $ionicLoading, EventsService, TokenService, UserService){
+    $rootScope.$on('$stateChangeStart', function (event, toState, toParams, fromState, fromParams) {
+      console.log('State change start');
+      console.log(toState);
+      if(toState.name === 'menu.tabs.discover'){
+        EventsService.getNearbyPlaces();
+        console.log('Discover events page');
 
+      }
+    })
+
+    var getNearbyPlaces = function(){
+
+
+      $ionicLoading.show({
+        template: '<ion-spinner icon="lines" class="spinner-royal"></ion-spinner>'
+      });
+
+      console.log('Started Loading Events');
+
+      var posOptions = {
+        enableHighAccuracy: true,
+        timeout: 20000,
+        maximumAge: 0
+      };
+
+      var config = {
+        headers : {
+          'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8;'
+        }
+      } ;
+
+      var token = TokenService.getUserToken();
+      console.log('nearbyPlaces Token',token);
+
+      if(token !== null){
+        $cordovaGeolocation.getCurrentPosition(posOptions).then(function (position) {
+        var lat  = position.coords.latitude;
+        var long = position.coords.longitude;
+        var params = {ruderToken: token.ruderToken ,lat : lat, lon: long};
+        console.log(token.ruderToken);
+        console.log(lat);
+        console.log(long);
+        console.log(params);
+
+
+        //After the lat and long is received from gps , request for the events data
+        //getNearbyPlaces will return the list of events on passing the ruder token
+        $http.get('http://192.168.0.114:8080/placefinder/getnearbyplaces', {params : params})
+          .success(function(data, status, headers, config) {
+            console.log('nearby places data success', data);
+            if(data.hasOwnProperty('success') && data.success === true){
+              //console.log('Succeess nearby places data');
+              if(data.hasOwnProperty('places')){
+                EventsService.setEventsData(data.places);
+                $scope.items = data.places;
+              }
+            }
+
+            $ionicLoading.hide();
+
+          })
+          .error(function (data, status, header, config){
+            console.log('nearby places data failure', data);
+            $state.go('menu.tabs.discover');
+            EventsService.setEventsData({});
+
+            $ionicLoading.hide();
+
+          });
+
+      }, function(err) {
+        $ionicLoading.hide();
+        console.log(err);
+      });
+      }
+    };
+
+    getNearbyPlaces();
 
     console.log(jQuery.isEmptyObject($scope.items));
     console.log($scope.items);
 
     $scope.index = 0;
     $scope.hosts = [{hostName: 'Tousif'},{hostName: 'Ved'}, {hostName: 'Rakesh'}];
+
+    $scope.showPopupIfNotCheckedIn = function(index){
+      var rudderData = UserService.getRudderData();
+      if(rudderData.checkIn.status === true){
+        $scope.index = index;
+            if($scope.items[index].id === rudderData.checkIn.whereId)
+            {
+              $state.go('menu.tabs.eventDetails');
+            }
+            else {
+              $scope.showAlert(index);
+            }
+          }
+
+      };
+
 
     $scope.showAlert = function(index) {
       console.log($scope.items[index]);
@@ -187,7 +279,7 @@ angular.module('controllers', [])
         if(res){
           //$state.go('menu.tabs.eventDetails');
           //console.log($scope.items[index].id);
-          CheckInService.checkInEvent($scope.items[index].id);
+          EventsService.checkInEvent($scope.items[index].id);
 
           console.log('You wish to join the event :)');
         }
@@ -198,7 +290,7 @@ angular.module('controllers', [])
     };
   })
 
-  .controller('EventDataCtrl', function($scope, $ionicModal, EventGuestsDataService, $q){
+  .controller('EventDataCtrl', function($scope, $ionicModal, $ionicPopover, $q, EventGuestsDataService, EventsService){
     //$scope.lists = EventGuestsDataService.getEventGuestsData();
     /*$scope.data = [{guestName : 'Hemant', guestTitle : 'UX/UI designer at Stayglad'},{guestName : 'Tousif',guestTitle : 'HMI developer at Harman'},
       {guestName : 'Ved', guestTitle : 'Big data expert at Oracle'},{guestName : 'Raj', guestTitle : 'Market research Analyst at SBD'},
@@ -213,6 +305,8 @@ angular.module('controllers', [])
     $scope.toTransition = false;
     $scope.dir = "default";
     $scope.connections = [{friendName: 'Tousif'},{friendName: 'Ved'}, {friendName: 'Rakesh'}];
+    $scope.following = {};
+    $scope.currentUserFollowStatus = false;
 
 
     function getSize(obj) {
@@ -223,7 +317,11 @@ angular.module('controllers', [])
       return size;
     };
 
+    function getFollowStatus(userId){
+      for(i=0; i< getSize($scope.following); i++){
 
+      }
+    }
 
     function listToMatrix(list, n) {
       var grid = [], i = 0, x = list.length, col, row = -1;
@@ -236,6 +334,48 @@ angular.module('controllers', [])
       }
       return grid;
     }
+
+
+    //Follow user
+    $scope.follow = function(followUserId){
+
+    };
+
+    //Unfollow user
+    $scope.unFollow = function(unFollowUserId){
+
+    };
+
+    //Popover
+    $ionicPopover.fromTemplateUrl('popover.html', {
+      scope: $scope,
+    }).then(function(popover) {
+      $scope.popover = popover;
+    });
+
+    $scope.openPopover = function($event) {
+      $scope.popover.show($event);
+    };
+    $scope.closePopover = function() {
+      $scope.popover.hide();
+    };
+    //Cleanup the popover when we're done with it!
+    $scope.$on('$destroy', function() {
+      $scope.popover.remove();
+    });
+    // Execute action on hide popover
+    $scope.$on('popover.hidden', function() {
+      // Execute action
+    });
+    // Execute action on remove popover
+    $scope.$on('popover.removed', function() {
+      // Execute action
+    });
+
+    $scope.checkout = function(){
+      $scope.closePopover();
+      EventsService.checkOutEvent();
+    };
 
     $scope.onSwipeRight = function() {
 
@@ -346,7 +486,6 @@ angular.module('controllers', [])
 
     $scope.$on('$destroy', function() {
       console.log('Modal destroyed');
-      $scope.modal.remove();
     });
 
     $scope.$on('modal.hidden', function() {
@@ -390,10 +529,10 @@ angular.module('controllers', [])
 
   .controller('UserMessagesCtrl', ['$scope', '$rootScope', '$state',
     '$stateParams', 'MockService', '$ionicActionSheet',
-    '$ionicPopup', '$ionicScrollDelegate', '$timeout', '$interval','Socket', 'UserService', 'FriendsDataService',
+    '$ionicPopup', '$ionicScrollDelegate', '$timeout', '$interval','socket', 'UserService', 'FriendsDataService',
     function($scope, $rootScope, $state, $stateParams, MockService,
              $ionicActionSheet,
-             $ionicPopup, $ionicScrollDelegate, $timeout, $interval, Socket, UserService, FriendsDataService) {
+             $ionicPopup, $ionicScrollDelegate, $timeout, $interval, socket, UserService, FriendsDataService) {
 
       console.log('user id is:',$stateParams.id);
       $scope.userData = UserService.getUser();
@@ -412,16 +551,21 @@ angular.module('controllers', [])
         }
       }
 
-      //Socket.emit('connect',{});
+      $rootScope.$on('socket:error', function (ev, data) {
+        console.log('Error received');
+      });
 
-      Socket.on('connect',function(){
+      socket.emit('join',{});
+
+
+      socket.on('connect',function(){
         //Add user called nickname
         //socket.emit('',’nickname’);
         console.log('Connected');
       })
 
       $scope.$on('locationChangeStart', function(event){
-        Socket.disconnect(true);
+        socket.disconnect(true);
       })
 
 

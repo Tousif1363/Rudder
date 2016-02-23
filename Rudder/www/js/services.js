@@ -1,14 +1,76 @@
 angular.module('services', [])
 
-  .factory('Socket',['socketFactory', function(socketFactory){
+  .factory('GeoAlert', function() {
+    console.log('GeoAlert service instantiated');
+    var interval;
+    var duration = 60000;
+    var long, lat;
+    var processing = false;
+    var callback;
+    var minDistance = 2;
+
+    // Credit: http://stackoverflow.com/a/27943/52160
+    function getDistanceFromLatLonInKm(lat1,lon1,lat2,lon2) {
+      var R = 6371; // Radius of the earth in km
+      var dLat = deg2rad(lat2-lat1);  // deg2rad below
+      var dLon = deg2rad(lon2-lon1);
+      var a =
+          Math.sin(dLat/2) * Math.sin(dLat/2) +
+          Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+          Math.sin(dLon/2) * Math.sin(dLon/2)
+        ;
+      var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      var d = R * c; // Distance in km
+      return d;
+    }
+
+    function deg2rad(deg) {
+      return deg * (Math.PI/180)
+    }
+
+    function hb() {
+      console.log('hb running');
+      if(processing) return;
+      processing = true;
+      navigator.geolocation.getCurrentPosition(function(position) {
+        processing = false;
+        console.log(lat, long);
+        console.log(position.coords.latitude, position.coords.longitude);
+        var dist = getDistanceFromLatLonInKm(lat, long, position.coords.latitude, position.coords.longitude);
+        console.log("dist in km is "+dist);
+        if(dist <= minDistance) callback();
+      });
+    }
+
+    return {
+      begin:function(lt,lg,cb) {
+        long = lg;
+        lat = lt;
+        callback = cb;
+        interval = window.setInterval(hb, duration);
+        hb();
+      },
+      end: function() {
+        window.clearInterval(interval);
+      },
+      setTarget: function(lg,lt) {
+        long = lg;
+        lat = lt;
+      }
+    };
+
+  })
+
+  .factory('socket',['socketFactory', function(socketFactory){
     //Create socket and connect to the chat server
-    var myIoSocket = io.connect('http://192.168.1.111:3000/message');
+    var myIoSocket = io.connect('http://localhost:8000');
+    console.log('In socket factory');
 
     mySocket = socketFactory({
       ioSocket: myIoSocket
     });
 
-    myIoSocket.on('connect', function() {
+    /*myIoSocket.on('connect', function() {
       console.log('on connect');
       myIoSocket.emit('join', {});
       myIoSocket.on('authenticated', function () {
@@ -17,140 +79,22 @@ angular.module('services', [])
       });
     })
 
+    myIoSocket.on('error',function(){
+      console.log('Error hai bhai.');
+    })*/
+
     return mySocket;
   }])
 
   .service('CheckInService',function($http, $state, $ionicLoading, TokenService, EventGuestsDataService){
     return {
-      checkInEvent : function(placeId){
 
-          console.log('Attempting check in ');
-          console.log('Place id is :', placeId);
-
-          //Show the loader till the check is complete or fails
-          $ionicLoading.show({
-            template: '<ion-spinner icon="lines" class="spinner-royal"></ion-spinner>'
-          });
-
-          //setting the headers to be passed
-          var config = {
-            headers : {
-              'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8;'
-            }
-          } ;
-
-          //Ruder token
-          var token = TokenService.getUserToken();
-          var placeId = placeId;
-
-          //Form the data to be sent to the server
-          var data = {
-            rudertoken : token.rudertoken,
-            placeId : placeId
-          };
-
-          console.log('Data sent to checkin',data);
-
-          //Notify the server for user check in
-          $http.post('http://192.168.1.111:8080/placefinder/checkin ', data)
-            .success(function(data, status, headers, config) {
-              if(data.hasOwnProperty('success') && data.success === true){
-                console.log('check in success', data);
-                if(data.hasOwnProperty('usersList')){
-                  //Set the data in EventGuestsDataService
-                  EventGuestsDataService.setEventGuestsData(data.usersList);
-
-                  //switch to event details screen , where checkedIn users list is displayed
-                  $state.go('menu.tabs.eventDetails');
-                }
-              }
-
-              $ionicLoading.hide();
-
-            })
-            .error(function (data, status, header, config){
-              console.log('checkin Failure', data);
-
-              $ionicLoading.hide();
-
-            });
-
-
-        }
 
     }
   })
 
   .service('LoginService', function ($http, $state, $q, $ionicLoading, TokenService, UserService,
                                      EventsService, FriendsDataService, $cordovaGeolocation) {
-
-
-    //Get nearby places data and show event discovery screen
-    var getNearbyPlaces = function(){
-
-
-      $ionicLoading.show({
-        template: '<ion-spinner icon="lines" class="spinner-royal"></ion-spinner>'
-      });
-
-      console.log('Started Loading Events');
-
-      var posOptions = {
-        enableHighAccuracy: true,
-        timeout: 20000,
-        maximumAge: 0
-      };
-
-      var config = {
-        headers : {
-          'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8;'
-        }
-      } ;
-
-      var token = TokenService.getUserToken();
-      console.log('nearbyPlaces Token',token);
-
-      $cordovaGeolocation.getCurrentPosition(posOptions).then(function (position) {
-        var lat  = position.coords.latitude;
-        var long = position.coords.longitude;
-        var params = {rudertoken: token.rudertoken ,lat : lat, lon: long};
-        console.log(token.rudertoken);
-        console.log(lat);
-        console.log(long);
-        console.log(params);
-
-
-        //After the lat and long is received from gps , request for the events data
-        //getNearbyPlaces will return the list of events on passing the ruder token
-        $http.get('http://192.168.1.111:8080/placefinder/getnearbyplaces', {params : params})
-          .success(function(data, status, headers, config) {
-            console.log('nearby places data success', data);
-            if(data.hasOwnProperty('success') && data.success === true){
-              //console.log('Succeess nearby places data');
-              if(data.hasOwnProperty('Places')){
-                EventsService.setEventsData(data.Places);
-              }
-            }
-
-            $state.go('menu.tabs.discover');
-
-            $ionicLoading.hide();
-
-          })
-          .error(function (data, status, header, config){
-            console.log('nearby places data failure', data);
-            $state.go('menu.tabs.discover');
-            EventsService.setEventsData({});
-
-            $ionicLoading.hide();
-
-          });
-
-      }, function(err) {
-        $ionicLoading.hide();
-        console.log(err);
-      });
-    }
 
     //This is to notify the server about the user.
     var createFbUser = function () {
@@ -173,14 +117,16 @@ angular.module('services', [])
       };
 
       //Post fb user data to server
-      $http.post('http://192.168.1.111:8080/facebook/createUser', data)
+      $http.post('http://192.168.0.114:8080/fb/login', data)
         .success(function (data, status, headers, config) {
           var message = data;
           console.log('createfbuser sucess',data);
-          console.log('ruderToken value', data.rudertoken);
+          console.log('ruderToken value', data.ruderToken);
           TokenService.setUserToken({
-            rudertoken : data.rudertoken
+            ruderToken : data.ruderToken
           });
+
+          UserService.setRudderData(data);
 
           token = TokenService.getUserToken();
 
@@ -190,7 +136,7 @@ angular.module('services', [])
           }
 
           //After the user details are received , fetch the event details
-          getNearbyPlaces();
+          //getNearbyPlaces();
 
           console.log('scope token : ', token);
 
@@ -201,9 +147,10 @@ angular.module('services', [])
           } ;
 
           //If fb user data is successfully posted to the server then verify the ruderToken
-          $http.post('http://192.168.1.111:8080/facebook/tokenverify', token)
+          $http.post('http://192.168.0.114:8080/tokenverify', token)
             .success(function(data, status, headers, config) {
               console.log('token verify success', data);
+              $state.go('menu.tabs.discover');
             })
             .error(function (data, status, header, config){
               console.log('token verify error', data);
@@ -387,9 +334,19 @@ angular.module('services', [])
       return JSON.parse(window.localStorage.starter_facebook_user || '{}');
     };
 
+    var setRudderData = function(rudder_data) {
+      window.localStorage.rudder_data_user = JSON.stringify(rudder_data);
+    };
+
+    var getRudderData = function(){
+      return JSON.parse(window.localStorage.rudder_data_user || '{}');
+    };
+
     return {
       getUser: getUser,
-      setUser: setUser
+      setUser: setUser,
+      setRudderData : setRudderData,
+      getRudderData : getRudderData
     };
   })
 
@@ -409,7 +366,7 @@ angular.module('services', [])
     };
   })
 
-  .service('EventsService', function() {
+  .service('EventsService', function($http, $state, $ionicLoading, TokenService, EventGuestsDataService, $cordovaGeolocation) {
 
 //for the purpose of this example I will store user data on ionic local storage but you should save it on a database
 
@@ -421,9 +378,188 @@ angular.module('services', [])
       return JSON.parse(window.localStorage.starter_events || '{}');
     };
 
+    //Get nearby places data and show event discovery screen
+
+    var getNearbyPlaces = function(){
+
+
+      $ionicLoading.show({
+        template: '<ion-spinner icon="lines" class="spinner-royal"></ion-spinner>'
+      });
+
+      console.log('Started Loading Events');
+
+      var posOptions = {
+        enableHighAccuracy: true,
+        timeout: 20000,
+        maximumAge: 0
+      };
+
+      var config = {
+        headers : {
+          'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8;'
+        }
+      } ;
+
+      var token = TokenService.getUserToken();
+      console.log('nearbyPlaces Token',token);
+
+      $cordovaGeolocation.getCurrentPosition(posOptions).then(function (position) {
+        var lat  = position.coords.latitude;
+        var long = position.coords.longitude;
+        var params = {ruderToken: token.ruderToken ,lat : lat, lon: long};
+        console.log(token.ruderToken);
+        console.log(lat);
+        console.log(long);
+        console.log(params);
+
+
+        //After the lat and long is received from gps , request for the events data
+        //getNearbyPlaces will return the list of events on passing the ruder token
+        $http.get('http://192.168.0.114:8080/placefinder/getnearbyplaces', {params : params})
+          .success(function(data, status, headers, config) {
+            console.log('nearby places data success', data);
+            if(data.hasOwnProperty('success') && data.success === true){
+              //console.log('Succeess nearby places data');
+              if(data.hasOwnProperty('places')){
+                 setEventsData(data.places);
+                //Refresh the views associated with
+              }
+            }
+
+
+            //$state.go('menu.tabs.discover');
+
+            $ionicLoading.hide();
+
+          })
+          .error(function (data, status, header, config){
+            console.log('nearby places data failure', data);
+            $state.go('menu.tabs.discover');
+            EventsService.setEventsData({});
+
+            $ionicLoading.hide();
+
+          });
+
+      }, function(err) {
+        $ionicLoading.hide();
+        console.log(err);
+      });
+    };
+
+    var checkInEvent = function(placeId){
+
+      console.log('Attempting check in ');
+      console.log('Place id is :', placeId);
+
+      //Show the loader till the check is complete or fails
+      $ionicLoading.show({
+        template: '<ion-spinner icon="lines" class="spinner-royal"></ion-spinner>'
+      });
+
+      //setting the headers to be passed
+      var config = {
+        headers : {
+          'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8;'
+        }
+      } ;
+
+      //Ruder token
+      var token = TokenService.getUserToken();
+      var placeId = placeId;
+
+      //Form the data to be sent to the server
+      var data = {
+        ruderToken : token.ruderToken,
+        placeId : placeId
+      };
+
+      console.log('Data sent to checkin',data);
+
+      //Notify the server for user check in
+      $http.post('http://192.168.0.114:8080/placefinder/checkin ', data)
+        .success(function(data, status, headers, config) {
+          if(data.hasOwnProperty('success') && data.success === true){
+            console.log('check in success', data);
+            if(data.hasOwnProperty('usersCheckedIn')){
+              //Set the data in EventGuestsDataService
+              EventGuestsDataService.setEventGuestsData(data.usersCheckedIn);
+
+              //switch to event details screen , where checkedIn users list is displayed
+              $state.go('menu.tabs.eventDetails');
+            }
+          }
+
+          $ionicLoading.hide();
+
+        })
+        .error(function (data, status, header, config){
+          console.log('checkin Failure', data);
+
+          $ionicLoading.hide();
+
+        });
+
+
+    };
+
+    var checkOutEvent = function(){
+
+      console.log('Attempting check out ');
+
+      //Show the loader till the check is complete or fails
+      $ionicLoading.show({
+        template: '<ion-spinner icon="lines" class="spinner-royal"></ion-spinner>'
+      });
+
+      //setting the headers to be passed
+      var config = {
+        headers : {
+          'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8;'
+        }
+      } ;
+
+      //Ruder token
+      var token = TokenService.getUserToken();
+
+      //Form the data to be sent to the server
+      var data = {
+        ruderToken : token.ruderToken
+      };
+
+      console.log('Data sent to checkout',data);
+
+      //Notify the server for user check in
+      $http.post('http://192.168.0.114:8080/placefinder/checkout ', data)
+        .success(function(data, status, headers, config) {
+          if(data.hasOwnProperty('success') && data.success === true){
+            console.log('checkout success', data);
+            EventGuestsDataService.setEventGuestsData(data.usersCheckedIn);
+
+            //switch to event details screen , where checkedIn users list is displayed
+            $state.go('menu.tabs.discover');
+          }
+
+          $ionicLoading.hide();
+
+        })
+        .error(function (data, status, header, config){
+          console.log('checkout Failure', data);
+
+          $ionicLoading.hide();
+
+        });
+
+
+    };
+
     return {
       setEventsData : setEventsData,
-      getEventsData : getEventsData
+      getEventsData : getEventsData,
+      getNearbyPlaces : getNearbyPlaces,
+      checkInEvent : checkInEvent,
+      checkOutEvent : checkOutEvent
     };
   })
 
@@ -436,6 +572,58 @@ angular.module('services', [])
 
     var getEventGuestsData = function(){
       return JSON.parse(window.localStorage.starter_event_guests_data || '{}');
+    };
+
+    var followUser = function (userId) {
+      console.log('Follow user ');
+      console.log('User id is :', userId);
+
+      //Show the loader till the check is complete or fails
+      $ionicLoading.show({
+        template: '<ion-spinner icon="lines" class="spinner-royal"></ion-spinner>'
+      });
+
+      //setting the headers to be passed
+      var config = {
+        headers : {
+          'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8;'
+        }
+      } ;
+
+      //Ruder token
+      var token = TokenService.getUserToken();
+      var userId = userId;
+
+      //Form the data to be sent to the server
+      var data = {
+        ruderToken : token.ruderToken,
+        receiverId : userId
+      };
+
+      console.log('Data sent to follow',data);
+
+      //Notify the server for user check in
+      $http.post('http://192.168.0.114:8080/follow', data)
+        .success(function(data, status, headers, config) {
+          if(data.hasOwnProperty('success') && data.success === true){
+            console.log('check in success', data);
+            if(data.hasOwnProperty('following')){
+              //Set the data in UserService
+
+
+              //switch to event details screen , where checkedIn users list is displayed
+            }
+          }
+
+          $ionicLoading.hide();
+
+        })
+        .error(function (data, status, header, config){
+          console.log('checkin Failure', data);
+
+          $ionicLoading.hide();
+
+        });
     };
 
     return {

@@ -5,7 +5,7 @@
 // the 2nd parameter is an array of 'requires'
 angular.module('starter', ['ionic', 'controllers', 'services','monospaced.elastic', 'angularMoment', 'ngCordova', 'btford.socket-io'])
 
-  .run(function($ionicPlatform, $state, UserService) {
+  .run(function($ionicPlatform, $state, $rootScope, UserService, EventsService) {
     $ionicPlatform.ready(function() {
       // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
       // for form inputs)
@@ -29,6 +29,16 @@ angular.module('starter', ['ionic', 'controllers', 'services','monospaced.elasti
             });
         }
       }
+
+      $rootScope.$on('$stateChangeSuccess', function (event, toState, toParams, fromState, fromParams) {
+        console.log('State change success');
+        console.log(toState);
+        if(toState.name === 'menu.tabs.discover'){
+          EventsService.getNearbyPlaces();
+          console.log('Discover events page');
+
+        }
+      })
 
     });
 
@@ -114,14 +124,10 @@ angular.module('starter', ['ionic', 'controllers', 'services','monospaced.elasti
           }
         }
       })
-      .state('menu.tabs.chat', {
+      .state('chat', {
         url: "/chat/:id",
-        views: {
-          'chat-tab' :{
-            templateUrl: "chat.html",
-            controller : 'UserMessagesCtrl'
-          }
-        }
+        templateUrl: "chat.html",
+        controller : 'UserMessagesCtrl'
       })
       .state('menu.tabs.feeds', {
         url: "/feeds",

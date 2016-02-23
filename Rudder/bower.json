@@ -1,6 +1,9 @@
 {
   "name": "HelloIonic",
   "private": "true",
+  "dependencies": {
+    "angular-socket-io": "^0.7.0"
+  },
   "devDependencies": {
     "ionic": "driftyco/ionic-bower#1.2.4"
   }
