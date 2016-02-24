@@ -30,15 +30,15 @@ angular.module('starter', ['ionic', 'controllers', 'services','monospaced.elasti
         }
       }
 
-      $rootScope.$on('$stateChangeSuccess', function (event, toState, toParams, fromState, fromParams) {
-        console.log('State change success');
-        console.log(toState);
-        if(toState.name === 'menu.tabs.discover'){
-          EventsService.getNearbyPlaces();
-          console.log('Discover events page');
-
-        }
-      })
+      //$rootScope.$on('$stateChangeSuccess', function (event, toState, toParams, fromState, fromParams) {
+      //  console.log('State change success');
+      //  console.log(toState);
+      //  if(toState.name === 'menu.tabs.discover'){
+      //    EventsService.getNearbyPlaces();
+      //    console.log('Discover events page');
+      //
+      //  }
+      //})
 
     });
 

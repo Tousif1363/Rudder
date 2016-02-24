@@ -5296,14 +5296,14 @@ ion-tabs.tabs-color-active-dark .tab-item {
   width: 100%;
   background-color: #fff; }
 
-@media (min-width: 680px) {
+@media (min-width: 0px) {
   .modal {
-    top: 20%;
-    right: 20%;
-    bottom: 20%;
-    left: 20%;
-    min-height: 240px;
-    width: 60%; }
+    top: 40%;
+    right: 0%;
+    bottom: 0%;
+    left: 0%;
+    min-height: 600px;
+    width: 100%; }
   .modal.ng-leave-active {
     bottom: 0; }
   .platform-ios.platform-cordova .modal-wrapper .modal .bar-header:not(.bar-subheader) {

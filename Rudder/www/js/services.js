@@ -63,7 +63,7 @@ angular.module('services', [])
 
   .factory('socket',['socketFactory', function(socketFactory){
     //Create socket and connect to the chat server
-    var myIoSocket = io.connect('http://localhost:8000');
+    var myIoSocket = io.connect('http://192.168.0.104:8080');
     console.log('In socket factory');
 
     mySocket = socketFactory({
@@ -117,7 +117,7 @@ angular.module('services', [])
       };
 
       //Post fb user data to server
-      $http.post('http://192.168.0.114:8080/fb/login', data)
+      $http.post('http://192.168.0.105:8080/fb/login', data)
         .success(function (data, status, headers, config) {
           var message = data;
           console.log('createfbuser sucess',data);
@@ -147,7 +147,7 @@ angular.module('services', [])
           } ;
 
           //If fb user data is successfully posted to the server then verify the ruderToken
-          $http.post('http://192.168.0.114:8080/tokenverify', token)
+          $http.post('http://192.168.0.105:8080/tokenverify', token)
             .success(function(data, status, headers, config) {
               console.log('token verify success', data);
               $state.go('menu.tabs.discover');
@@ -164,7 +164,7 @@ angular.module('services', [])
             "<hr />config: " + config;
           console.log('createfbuser error',data);
 
-          TokenService.setUserToken(null);
+          TokenService.setUserToken({});
           $state.go('menu.tabs.discover');
 
         });
@@ -322,7 +322,7 @@ angular.module('services', [])
     }
   })
 
-  .service('UserService', function() {
+  .service('UserService', function($ionicLoading, TokenService) {
 
 //for the purpose of this example I will store user data on ionic local storage but you should save it on a database
 
@@ -416,7 +416,7 @@ angular.module('services', [])
 
         //After the lat and long is received from gps , request for the events data
         //getNearbyPlaces will return the list of events on passing the ruder token
-        $http.get('http://192.168.0.114:8080/placefinder/getnearbyplaces', {params : params})
+        $http.get('http://192.168.0.105:8080/placefinder/getnearbyplaces', {params : params})
           .success(function(data, status, headers, config) {
             console.log('nearby places data success', data);
             if(data.hasOwnProperty('success') && data.success === true){
@@ -436,7 +436,7 @@ angular.module('services', [])
           .error(function (data, status, header, config){
             console.log('nearby places data failure', data);
             $state.go('menu.tabs.discover');
-            EventsService.setEventsData({});
+            setEventsData({});
 
             $ionicLoading.hide();
 
@@ -478,7 +478,7 @@ angular.module('services', [])
       console.log('Data sent to checkin',data);
 
       //Notify the server for user check in
-      $http.post('http://192.168.0.114:8080/placefinder/checkin ', data)
+      $http.post('http://192.168.0.105:8080/placefinder/checkin ', data)
         .success(function(data, status, headers, config) {
           if(data.hasOwnProperty('success') && data.success === true){
             console.log('check in success', data);
@@ -531,7 +531,7 @@ angular.module('services', [])
       console.log('Data sent to checkout',data);
 
       //Notify the server for user check in
-      $http.post('http://192.168.0.114:8080/placefinder/checkout ', data)
+      $http.post('http://192.168.0.105:8080/placefinder/checkout ', data)
         .success(function(data, status, headers, config) {
           if(data.hasOwnProperty('success') && data.success === true){
             console.log('checkout success', data);
@@ -603,7 +603,7 @@ angular.module('services', [])
       console.log('Data sent to follow',data);
 
       //Notify the server for user check in
-      $http.post('http://192.168.0.114:8080/follow', data)
+      $http.post('http://192.168.0.105:8080/follow', data)
         .success(function(data, status, headers, config) {
           if(data.hasOwnProperty('success') && data.success === true){
             console.log('check in success', data);

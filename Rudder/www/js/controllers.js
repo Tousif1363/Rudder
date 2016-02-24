@@ -165,15 +165,18 @@ angular.module('controllers', [])
   })
 
   .controller('EventsCtrl', function($scope, $rootScope, $timeout, $q, $http, $ionicPopup, $state, $cordovaGeolocation, $ionicLoading, EventsService, TokenService, UserService){
+    console.log('EventsCtrl');
+
+    //Ensures data is loaded every time the screen is opened.
     $rootScope.$on('$stateChangeStart', function (event, toState, toParams, fromState, fromParams) {
       console.log('State change start');
       console.log(toState);
       if(toState.name === 'menu.tabs.discover'){
-        EventsService.getNearbyPlaces();
+        getNearbyPlaces();
         console.log('Discover events page');
 
       }
-    })
+    });
 
     var getNearbyPlaces = function(){
 
@@ -212,7 +215,7 @@ angular.module('controllers', [])
 
         //After the lat and long is received from gps , request for the events data
         //getNearbyPlaces will return the list of events on passing the ruder token
-        $http.get('http://192.168.0.114:8080/placefinder/getnearbyplaces', {params : params})
+        $http.get('http://192.168.0.105:8080/placefinder/getnearbyplaces', {params : params})
           .success(function(data, status, headers, config) {
             console.log('nearby places data success', data);
             if(data.hasOwnProperty('success') && data.success === true){
@@ -252,16 +255,17 @@ angular.module('controllers', [])
 
     $scope.showPopupIfNotCheckedIn = function(index){
       var rudderData = UserService.getRudderData();
-      if(rudderData.checkIn.status === true){
+      console.log('In Checkin');
+      if(rudderData.checkIn.status === true) {
         $scope.index = index;
-            if($scope.items[index].id === rudderData.checkIn.whereId)
-            {
-              $state.go('menu.tabs.eventDetails');
-            }
-            else {
-              $scope.showAlert(index);
-            }
-          }
+        if ($scope.items[index].id === rudderData.checkIn.whereId) {
+          EventsService.checkInEvent($scope.items[index].id);
+        }
+      }
+      else {
+        $scope.showAlert(index);
+      }
+
 
       };
 
@@ -290,7 +294,7 @@ angular.module('controllers', [])
     };
   })
 
-  .controller('EventDataCtrl', function($scope, $ionicModal, $ionicPopover, $q, EventGuestsDataService, EventsService){
+  .controller('EventDataCtrl', function($scope, $ionicModal, $ionicLoading, $ionicPopover, $q, $http,  EventGuestsDataService, EventsService, UserService, TokenService ){
     //$scope.lists = EventGuestsDataService.getEventGuestsData();
     /*$scope.data = [{guestName : 'Hemant', guestTitle : 'UX/UI designer at Stayglad'},{guestName : 'Tousif',guestTitle : 'HMI developer at Harman'},
       {guestName : 'Ved', guestTitle : 'Big data expert at Oracle'},{guestName : 'Raj', guestTitle : 'Market research Analyst at SBD'},
@@ -306,6 +310,7 @@ angular.module('controllers', [])
     $scope.dir = "default";
     $scope.connections = [{friendName: 'Tousif'},{friendName: 'Ved'}, {friendName: 'Rakesh'}];
     $scope.following = {};
+    //TODO :: ensusre that the follow user status is reset
     $scope.currentUserFollowStatus = false;
 
 
@@ -338,6 +343,31 @@ angular.module('controllers', [])
 
     //Follow user
     $scope.follow = function(followUserId){
+
+
+        $ionicLoading.show();
+
+        var token = TokenService.getUserToken().ruderToken;
+        var data = {ruderToken : token, receiverId : followUserId};
+        //Notify the server to follow user
+        $http.post('http://192.168.0.105:8080/follow ', data)
+          .success(function(data, status, headers, config) {
+            if(data.hasOwnProperty('success') && data.success === true){
+              console.log('follow success', data);
+              if(data.hasOwnProperty('following')){
+                UserService.setRudderData(data.following);
+              }
+            }
+            $scope.currentUserFollowStatus = true;
+            $ionicLoading.hide();
+          })
+          .error(function (data, status, header, config){
+            console.log('follow failure', data);
+            $scope.currentUserFollowStatus = false;
+            $ionicLoading.hide();
+          });
+
+
 
     };
 
@@ -466,6 +496,7 @@ angular.module('controllers', [])
       $scope.modal.remove()
         .then(function() {
           $scope.modal = null;
+          $scope.currentUserFollowStatus = false;
 
           if($scope.toTransition)
           {
@@ -535,16 +566,16 @@ angular.module('controllers', [])
              $ionicPopup, $ionicScrollDelegate, $timeout, $interval, socket, UserService, FriendsDataService) {
 
       console.log('user id is:',$stateParams.id);
-      $scope.userData = UserService.getUser();
+      $scope.userData = UserService.getRudderData();
       console.log($scope.userData);
       $scope.toUserId = $stateParams.id;
       $scope.friendsData = FriendsDataService.getFriendsData();
 
-      console.log($scope.friendsData);
-      console.log($scope.toUserId);
+      console.log('Friends data:', $scope.friendsData);
+      console.log('User id :', $scope.toUserId);
 
       for (i = 0; i < $scope.friendsData.length; i++) {
-        if($scope.friendsData[i].id == $scope.toUserId){
+        if($scope.friendsData[i].userId === $scope.toUserId){
           console.log('Equal found');
           $scope.toUserData = $scope.friendsData[i];
           console.log('toUserData', $scope.toUserData);
@@ -555,13 +586,19 @@ angular.module('controllers', [])
         console.log('Error received');
       });
 
-      socket.emit('join',{});
+      console.log('userData : ', $scope.userData);
+
+      var joinData = {userId : $scope.userData.userId};
+
+      console.log(joinData);
+
+      socket.emit('join', joinData);
 
 
       socket.on('connect',function(){
         //Add user called nickname
         //socket.emit('',’nickname’);
-        console.log('Connected');
+        console.log('Socket Connected');
       })
 
       $scope.$on('locationChangeStart', function(event){
@@ -593,7 +630,7 @@ angular.module('controllers', [])
       }
 
       $scope.user = {
-        _id: $scope.userData.userID,
+        _id: $scope.userData.userId,
         pic: 'http://ionicframework.com/img/docs/mcfly.jpg',
         username: $scope.userData.name
       };
@@ -664,17 +701,33 @@ angular.module('controllers', [])
       });
 
       $scope.sendMessage = function(sendMessageForm) {
-        var message = {
+        /*var message = {
           toId: $scope.toUser._id,
           text: $scope.input.message
+        };*/
+
+        var message = {
+          timestamp : new Date(),
+          message: $scope.input.message,
+          to_id: $scope.toUser._id
         };
+
+        socket.emit('send message', message);
+
+        $scope.input.message = '';
+
 
         // if you do a web service call this will be needed as well as before the viewScroll calls
         // you can't see the effect of this in the browser it needs to be used on a real device
         // for some reason the one time blur event is not firing in the browser but does on devices
         keepKeyboardOpen();
 
-        //MockService.sendMessage(message).then(function(data) {
+        $timeout(function() {
+          keepKeyboardOpen();
+          viewScroll.scrollBottom(true);
+        }, 0);
+
+        /*MockService.sendMessage(message).then(function(data) {
         $scope.input.message = '';
 
         message._id = new Date().getTime(); // :~)
@@ -683,7 +736,12 @@ angular.module('controllers', [])
         message.userId = $scope.user._id;
         message.pic = $scope.user.picture;
 
+        $scope.input.message = '';
+
+
         $scope.messages.push(message);
+
+        socket.emit('send message',$scope.input.message);
 
         $timeout(function() {
           keepKeyboardOpen();
@@ -696,7 +754,7 @@ angular.module('controllers', [])
           viewScroll.scrollBottom(true);
         }, 2000);
 
-        //});
+        });*/
       };
 
       // this keeps the keyboard open on a device only after sending a message, it is non obtrusive

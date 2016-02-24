@@ -30,7 +30,7 @@
 
   <!--<script src='lib/facebook-connect-plugin/index.js'></script>-->
 
-  <script src="http://localhost:8000/socket.io/socket.io.js"></script>
+  <script src="http://192.168.0.104:8080/socket.io/socket.io.js"></script>
 
   <!-- Other Libraries-->
   <script src="lib/angular-sanitize/angular-sanitize.min.js"></script>
@@ -225,8 +225,9 @@
           <p>{{}}</p>
           <div class="row" style="margin: -30px 0px -20px 0px;">
             <div class = "col-20 col-offset-80">
-              <button class="tab-item">
-                <i class="icon ion-person-add"></i>
+              <button class="button button-icon ion-person-add icon-friend-request" ng-if="currentUserFollowStatus === true">
+              </button>
+              <button class="button button-icon ion-person-add" ng-if="currentUserFollowStatus === false" ng-click="follow(item.userId)">
               </button>
             </div>
           </div>
@@ -237,7 +238,7 @@
     </div>
     <div class="modal-body">
       <ion-list on-swipe-left="onSwipeLeft()" on-swipe-right="onSwipeRight()">
-        <ion-item class="item item-body">
+        <!--<ion-item class="item item-body">
           <div class="row">
             <a class="tab-item">
               <i class="icon ion-social-linkedin icon-change"></i>
@@ -267,7 +268,7 @@
             </button>
           </div>
 
-        </ion-item>
+        </ion-item>-->
         <ion-item>
           <div class="">Common Connections</div>
           <div class="row row-wrap">
@@ -376,7 +377,7 @@
     </ion-header-bar>
     <ion-content class="padding">
       <div class="list">
-        <a class="item item-avatar" ui-sref="chat({id : item.id})" ng-repeat="item in chatList">
+        <a class="item item-avatar" ui-sref="chat({id : item.userId})" ng-repeat="item in chatList">
           <img src="img/avatar.jpg">
           <h2 ng-bind="item.name"></h2>
           <!--<p ng-bind="item.lastMsg"></p>-->

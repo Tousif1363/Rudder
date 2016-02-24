@@ -520,7 +520,7 @@ ion-tabs {
 }
 
 .nav-bar-tabs-top.hide ~ .view-container .tabs-top .tabs{
-  top: 0
+  top: 44px;
 }
 .pane[hide-nav-bar="true"] .has-tabs-top{
   top:$tabs-height
