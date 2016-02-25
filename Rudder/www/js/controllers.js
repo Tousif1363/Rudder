@@ -750,12 +750,6 @@ angular.module('controllers', [])
       });*/
 
       $scope.sendMessage = function(sendMessageForm) {
-        /*var message = {
-          toId: $scope.toUser._id,
-          text: $scope.input.message
-        };*/
-
-
         var message = {
           timestamp : new Date(),
           message: $scope.input.message,
@@ -785,7 +779,7 @@ angular.module('controllers', [])
             console.log('message data defined');
             console.log($scope.msgLog);
             $scope.msgLog.push(message);
-            UserMessagesDataService.setUserMessagesData($scope.toUser._id, $scope.msgLog);
+            UserMessagesDataService.setUserMessagesData($scope.toUser._id, {messages : $scope.msgLog});
 
             //setMessages($scope.toUser._id, msgLog);
 
@@ -799,26 +793,6 @@ angular.module('controllers', [])
           }
 
           getMessages();
-
-        /*if(isEmpty(UserMessagesDataService.getUserMessagesData($scope.toUser._id))){
-          console.log('Empty');
-          UserMessagesDataService.setUserMessagesData($scope.toUser._id, message);
-          console.log('Messages:',UserMessagesDataService.getUserMessagesData($scope.toUser._id));
-
-          $scope.messages = UserMessagesDataService.getUserMessagesData($scope.toUser._id);
-        }
-        else{
-          console.log('Not Empty');
-
-          var messageLog = UserMessagesDataService.getUserMessagesData($scope.toUser._id);
-          messageLog.push(message);
-          UserMessagesDataService.setUserMessagesData($scope.toUser._id, messageLog);
-          console.log('Messages:',UserMessagesDataService.getUserMessagesData($scope.toUser._id));
-
-          $scope.messages = UserMessagesDataService.getUserMessagesData($scope.toUser._id);
-        }*/
-
-        //$scope.messages = UserMessagesDataService.getUserMessagesData($scope.toUser._id);
 
         $scope.input.message = '';
 
