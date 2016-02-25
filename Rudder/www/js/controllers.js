@@ -34,10 +34,11 @@ angular.module('controllers', [])
 
 
 
-  .controller('AppCtrl', function($scope, $rootScope, EventsService, EventGuestsDataService , ChatListDataService){
+  .controller('AppCtrl', function($scope, $rootScope, UserService, EventGuestsDataService , ChatListDataService){
     console.log('Set user data here');
 
     ionic.Platform.ready(function() {
+      $scope.user = UserService.getUser();
 
     });
 
@@ -178,6 +179,12 @@ angular.module('controllers', [])
       }
     });
 
+    /*$scope.$on('$ionicView.enter', function() {
+      console.log('Events page entered');
+      getNearbyPlaces();
+
+    });*/
+
     var getNearbyPlaces = function(){
 
 
@@ -260,6 +267,9 @@ angular.module('controllers', [])
         $scope.index = index;
         if ($scope.items[index].id === rudderData.checkIn.whereId) {
           EventsService.checkInEvent($scope.items[index].id);
+        }
+        else{
+          $scope.showAlert(index);
         }
       }
       else {
@@ -533,7 +543,8 @@ angular.module('controllers', [])
     console.log('Chat List');
 
     $scope.joinChat = function(id){
-      $state.go('chat',{id: id});
+
+      $state.go('menu.tabs.chat',{id: id});
     };
   })
 
@@ -621,6 +632,9 @@ angular.module('controllers', [])
         $rootScope.$on('$stateChangeSuccess', function (event, toState, toParams, fromState, fromParams) {
           console.log('User Messages State change success');
         });
+
+
+
       });
 
       console.log('userData : ', $scope.userData);
@@ -679,18 +693,26 @@ angular.module('controllers', [])
 
         var rudderData = UserService.getRudderData();
 
-        //start socket connection here
-        socket.emit('join', {
-          userId: rudderData.userId
-        }, function (result) {
-          if (!result) {
-            console.log('There was an error joining user');
-          } else {
-            console.log("User joined");
-          }
-        });
-
         getMessages();
+
+        socket.on('new message', function (message) {
+
+          console.log('msgLog',$scope.msgLog);
+          if ($scope.msgLog !== undefined) {
+            console.log('new message data defined');
+            console.log($scope.msgLog);
+            $scope.msgLog.push(message);
+            UserMessagesDataService.setUserMessagesData($scope.toUser._id, {messages : $scope.msgLog});
+          }
+          else{
+            console.log('new message data undefined');
+            UserMessagesDataService.setUserMessagesData($scope.toUser._id, {messages : [message]});
+            console.log($scope.msgLog);
+            //setMessages($scope.toUser._id, {messages : [message]});
+          }
+
+          getMessages();
+        });
 
         $timeout(function() {
           footerBar = document.body.querySelector('#chatView .bar-footer');
@@ -714,7 +736,7 @@ angular.module('controllers', [])
 
       $scope.$on('$ionicView.beforeLeave', function() {
         if (!$scope.input.message || $scope.input.message === '') {
-          localStorage.removeItem('userMessage-' + $scope.toUser._id);
+          //localStorage.removeItem('userMessage-' + $scope.toUser._id);
         }
       });
 
@@ -766,6 +788,9 @@ angular.module('controllers', [])
             console.log("Message sent");
           }
         });
+
+
+
 
 
 

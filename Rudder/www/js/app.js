@@ -124,10 +124,14 @@ angular.module('starter', ['ionic', 'controllers', 'services','monospaced.elasti
           }
         }
       })
-      .state('chat', {
+      .state('menu.tabs.chat', {
         url: "/chat/:id",
-        templateUrl: "chat.html",
-        controller : 'UserMessagesCtrl'
+        views: {
+          'chat-tab': {
+            templateUrl: "chat.html",
+            controller: 'UserMessagesCtrl'
+          }
+        }
       })
       .state('menu.tabs.feeds', {
         url: "/feeds",

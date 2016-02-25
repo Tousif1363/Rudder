@@ -61,49 +61,29 @@ angular.module('services', [])
 
   })
 
-  .factory('socket',['socketFactory', function(socketFactory){
-    //Create socket and connect to the chat server
-    var myIoSocket = io.connect('http://192.168.0.104:8080');
-    console.log('In socket factory');
-
-    mySocket = socketFactory({
-      ioSocket: myIoSocket
-    });
-
-    /*myIoSocket.on('connect', function() {
-      console.log('on connect');
-      //myIoSocket.emit('join', {});
-     /!* myIoSocket.on('authenticated', function () {
-        // use the socket as usual
-        console.log('User is authenticated');
-      });*!/
-    });
-
-    myIoSocket.on('error',function(){
-      console.log('Error hai bhai.');
-    });*/
-
-    return {
-      on: function (eventName, callback) {
-        mySocket.on(eventName, function () {
-          var args = arguments;
-          $rootScope.$apply(function () {
-            callback.apply(socket, args);
-          });
+.factory('socket', function ($rootScope) {
+  var socket = io.connect('http://192.168.0.104:8080/message');
+  return {
+    on: function (eventName, callback) {
+      socket.on(eventName, function () {
+        var args = arguments;
+        $rootScope.$apply(function () {
+          callback.apply(socket, args);
         });
-      },
-      emit: function (eventName, data, callback) {
-        mySocket.emit(eventName, data, function () {
-          var args = arguments;
-          $rootScope.$apply(function () {
-            if (callback) {
-              callback.apply(socket, args);
-            }
-          });
-        })
-      }
+      });
+    },
+    emit: function (eventName, data, callback) {
+      socket.emit(eventName, data, function () {
+        var args = arguments;
+        $rootScope.$apply(function () {
+          if (callback) {
+            callback.apply(socket, args);
+          }
+        });
+      })
     }
-  }])
+  };
+})
 
   .service('ChatService',function(socket){
     var joinChat = function(userId){
@@ -178,6 +158,20 @@ angular.module('services', [])
           $http.post('http://192.168.0.104:8080/tokenverify', token)
             .success(function(data, status, headers, config) {
               console.log('token verify success', data);
+
+              var rudderData = UserService.getRudderData();
+              //start socket connection here
+              socket.emit('join', {
+                userId: rudderData.userId
+              }, function (result) {
+                if (!result) {
+                  console.log('There was an error joining user');
+                } else {
+                  console.log("User joined");
+                }
+              });
+              console.log('Join emitted');
+
               $state.go('menu.tabs.discover');
             })
             .error(function (data, status, header, config){
@@ -280,7 +274,7 @@ angular.module('services', [])
           console.log('getLoginStatus', success);
 
           //check if we have our user saved
-          var user = UserService.getUser('facebook');
+          var user = UserService.getUser();
 
           console.log('LoginStatus');
 

@@ -56,8 +56,8 @@
       <ion-content class="background-color-ruder">
         <div class="card card-profile">
           <div class="item item-avatar-center-big">
-            <img src="img/avatar.jpg">
-            <h2>Tousif</h2>
+            <img ng-src="{{'http://graph.facebook.com/' + user.userID + '/picture?type=small'}}">
+            <h2 ng-bind="user.name"></h2>
             <p>Entre</p>
           </div>
         </div>
@@ -312,7 +312,7 @@
         <div class="col col-33" ng-repeat="list in row" ng-init="colIndex = $index" ng-click="openModal(list, colIndex, rowIndex, 'slideInUp')">
           <div class="card card-guests margin-0">
             <div class="item item-borderless item-avatar-center">
-              <img ng-src="{{'http://graph.facebook.com/' + list.userId + '/picture?type=large'}}">
+              <img ng-src="{{'http://graph.facebook.com/' + list.userId + '/picture?type=small'}}">
               <h2 ng-bind="list.name"></h2>
               <p ng-bind=""></p>
             </div>
@@ -369,15 +369,9 @@
 
 <script id="chatList.html" type="text/ng-template">
   <ion-view view-title="Chat">
-    <ion-header-bar class="bar-royal bar-subheader item-input-inset">
-      <label class="item-input-wrapper">
-        <i class="icon ion-ios-search placeholder-icon"></i>
-        <input type="search" placeholder="Search">
-      </label>
-    </ion-header-bar>
     <ion-content class="padding">
       <div class="list">
-        <a class="item item-avatar" ui-sref="chat({id : item.userId})" ng-repeat="item in chatList">
+        <a class="item item-avatar" ng-repeat="item in chatList" ng-click="joinChat(item.userId)">
           <img src="img/avatar.jpg">
           <h2 ng-bind="item.name"></h2>
           <!--<p ng-bind="item.lastMsg"></p>-->
@@ -413,7 +407,7 @@
     <ion-content has-bouncing="true" class="has-footer"
                  delegate-handle="userMessageScroll">
 
-      <div ng-repeat="message in messages" class="message-wrapper"
+      <div ng-repeat="message in messages track by $index" class="message-wrapper"
            on-hold="onMessageHold($event, $index, message)">
 
       <!--  <div>
