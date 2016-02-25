@@ -72,29 +72,57 @@ angular.module('services', [])
 
     /*myIoSocket.on('connect', function() {
       console.log('on connect');
-      myIoSocket.emit('join', {});
-      myIoSocket.on('authenticated', function () {
+      //myIoSocket.emit('join', {});
+     /!* myIoSocket.on('authenticated', function () {
         // use the socket as usual
         console.log('User is authenticated');
-      });
-    })
+      });*!/
+    });
 
     myIoSocket.on('error',function(){
       console.log('Error hai bhai.');
-    })*/
+    });*/
 
-    return mySocket;
+    return {
+      on: function (eventName, callback) {
+        mySocket.on(eventName, function () {
+          var args = arguments;
+          $rootScope.$apply(function () {
+            callback.apply(socket, args);
+          });
+        });
+      },
+      emit: function (eventName, data, callback) {
+        mySocket.emit(eventName, data, function () {
+          var args = arguments;
+          $rootScope.$apply(function () {
+            if (callback) {
+              callback.apply(socket, args);
+            }
+          });
+        })
+      }
+    }
   }])
 
-  .service('CheckInService',function($http, $state, $ionicLoading, TokenService, EventGuestsDataService){
+  .service('ChatService',function(socket){
+    var joinChat = function(userId){
+      var joinData = {userId : userId};
+      socket.emit('join', joinData);
+    }
+
+    var sendMessage = function(message){
+      socket.emit('send message', message);
+    }
+
     return {
-
-
+      joinChat : joinChat,
+      sendMessage : sendMessage
     }
   })
 
   .service('LoginService', function ($http, $state, $q, $ionicLoading, TokenService, UserService,
-                                     EventsService, FriendsDataService, $cordovaGeolocation) {
+                                     EventsService, FriendsDataService, $cordovaGeolocation, socket) {
 
     //This is to notify the server about the user.
     var createFbUser = function () {
@@ -117,7 +145,7 @@ angular.module('services', [])
       };
 
       //Post fb user data to server
-      $http.post('http://192.168.0.105:8080/fb/login', data)
+      $http.post('http://192.168.0.104:8080/fb/login', data)
         .success(function (data, status, headers, config) {
           var message = data;
           console.log('createfbuser sucess',data);
@@ -147,7 +175,7 @@ angular.module('services', [])
           } ;
 
           //If fb user data is successfully posted to the server then verify the ruderToken
-          $http.post('http://192.168.0.105:8080/tokenverify', token)
+          $http.post('http://192.168.0.104:8080/tokenverify', token)
             .success(function(data, status, headers, config) {
               console.log('token verify success', data);
               $state.go('menu.tabs.discover');
@@ -416,7 +444,7 @@ angular.module('services', [])
 
         //After the lat and long is received from gps , request for the events data
         //getNearbyPlaces will return the list of events on passing the ruder token
-        $http.get('http://192.168.0.105:8080/placefinder/getnearbyplaces', {params : params})
+        $http.get('http://192.168.0.104:8080/placefinder/getnearbyplaces', {params : params})
           .success(function(data, status, headers, config) {
             console.log('nearby places data success', data);
             if(data.hasOwnProperty('success') && data.success === true){
@@ -478,7 +506,7 @@ angular.module('services', [])
       console.log('Data sent to checkin',data);
 
       //Notify the server for user check in
-      $http.post('http://192.168.0.105:8080/placefinder/checkin ', data)
+      $http.post('http://192.168.0.104:8080/placefinder/checkin ', data)
         .success(function(data, status, headers, config) {
           if(data.hasOwnProperty('success') && data.success === true){
             console.log('check in success', data);
@@ -531,7 +559,7 @@ angular.module('services', [])
       console.log('Data sent to checkout',data);
 
       //Notify the server for user check in
-      $http.post('http://192.168.0.105:8080/placefinder/checkout ', data)
+      $http.post('http://192.168.0.104:8080/placefinder/checkout ', data)
         .success(function(data, status, headers, config) {
           if(data.hasOwnProperty('success') && data.success === true){
             console.log('checkout success', data);
@@ -603,7 +631,7 @@ angular.module('services', [])
       console.log('Data sent to follow',data);
 
       //Notify the server for user check in
-      $http.post('http://192.168.0.105:8080/follow', data)
+      $http.post('http://192.168.0.104:8080/follow', data)
         .success(function(data, status, headers, config) {
           if(data.hasOwnProperty('success') && data.success === true){
             console.log('check in success', data);
@@ -664,9 +692,27 @@ angular.module('services', [])
     };
   })
 
-  // services
-  .factory('MockService', ['$http', '$q',
-    function($http, $q) {
+  .service('UserMessagesDataService', function() {
+
+    var setUserMessagesData = function(toUserId, chat_data) {
+      window.localStorage['userMessage-'+toUserId] = JSON.stringify(chat_data);
+    };
+
+    var getUserMessagesData = function(toUserId){
+      //console.log(toUserId);
+      return JSON.parse(window.localStorage['userMessage-'+toUserId] || '{}');
+    };
+
+    return {
+      setUserMessagesData : setUserMessagesData,
+      getUserMessagesData : getUserMessagesData
+    };
+  })
+
+
+  // MockService for messages
+  .factory('MockService', ['$http', '$q', 'UserMessagesDataService',
+    function($http, $q, UserMessagesDataService) {
       var me = {};
 
       me.getUserMessages = function(d) {
@@ -683,7 +729,18 @@ angular.module('services', [])
         var deferred = $q.defer();
 
         setTimeout(function() {
-          deferred.resolve(getMockMessages());
+          deferred.resolve(UserMessagesDataService.getUserMessagesData(d));
+        }, 0);
+
+        return deferred.promise;
+      };
+
+      me.setUserMessages = function(id,data) {
+
+        var deferred = $q.defer();
+
+        setTimeout(function() {
+          deferred.resolve(UserMessagesDataService.setUserMessagesData(id,data));
         }, 0);
 
         return deferred.promise;
@@ -695,7 +752,7 @@ angular.module('services', [])
           date: new Date(),
           text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.'
         };
-      }
+      };
 
       return me;
     }

@@ -41,7 +41,7 @@ angular.module('controllers', [])
 
     });
 
-    $rootScope.$on('$stateChangeStart', function(event, toState){
+    /*$rootScope.$on('$stateChangeStart', function(event, toState){
       console.log('Starting state change');
       console.log(toState);
 
@@ -51,7 +51,7 @@ angular.module('controllers', [])
 
     $rootScope.$on('$stateChangeSuccess', function (event, toState, toParams, fromState, fromParams) {
       console.log('State change success');
-    })
+    });*/
 
     /*EventsService.setEventsData([{
       eventName : "Jimmy's Pub",
@@ -202,7 +202,7 @@ angular.module('controllers', [])
       var token = TokenService.getUserToken();
       console.log('nearbyPlaces Token',token);
 
-      if(token !== null){
+      if(token.ruderToken){
         $cordovaGeolocation.getCurrentPosition(posOptions).then(function (position) {
         var lat  = position.coords.latitude;
         var long = position.coords.longitude;
@@ -215,7 +215,7 @@ angular.module('controllers', [])
 
         //After the lat and long is received from gps , request for the events data
         //getNearbyPlaces will return the list of events on passing the ruder token
-        $http.get('http://192.168.0.105:8080/placefinder/getnearbyplaces', {params : params})
+        $http.get('http://192.168.0.104:8080/placefinder/getnearbyplaces', {params : params})
           .success(function(data, status, headers, config) {
             console.log('nearby places data success', data);
             if(data.hasOwnProperty('success') && data.success === true){
@@ -265,8 +265,6 @@ angular.module('controllers', [])
       else {
         $scope.showAlert(index);
       }
-
-
       };
 
 
@@ -350,7 +348,7 @@ angular.module('controllers', [])
         var token = TokenService.getUserToken().ruderToken;
         var data = {ruderToken : token, receiverId : followUserId};
         //Notify the server to follow user
-        $http.post('http://192.168.0.105:8080/follow ', data)
+        $http.post('http://192.168.0.104:8080/follow ', data)
           .success(function(data, status, headers, config) {
             if(data.hasOwnProperty('success') && data.success === true){
               console.log('follow success', data);
@@ -560,10 +558,10 @@ angular.module('controllers', [])
 
   .controller('UserMessagesCtrl', ['$scope', '$rootScope', '$state',
     '$stateParams', 'MockService', '$ionicActionSheet',
-    '$ionicPopup', '$ionicScrollDelegate', '$timeout', '$interval','socket', 'UserService', 'FriendsDataService',
+    '$ionicPopup', '$ionicScrollDelegate', '$timeout', '$interval','socket', 'UserService', 'FriendsDataService', 'UserMessagesDataService', 'ChatService',
     function($scope, $rootScope, $state, $stateParams, MockService,
              $ionicActionSheet,
-             $ionicPopup, $ionicScrollDelegate, $timeout, $interval, socket, UserService, FriendsDataService) {
+             $ionicPopup, $ionicScrollDelegate, $timeout, $interval, socket, UserService, FriendsDataService, UserMessagesDataService, ChatService) {
 
       console.log('user id is:',$stateParams.id);
       $scope.userData = UserService.getRudderData();
@@ -582,13 +580,52 @@ angular.module('controllers', [])
         }
       }
 
-      $rootScope.$on('socket:error', function (ev, data) {
-        console.log('Error received');
+      // toUser data received from the $stateParams
+      $scope.toUser = {
+        _id: $scope.toUserId,
+        pic: 'http://ionicframework.com/img/docs/venkman.jpg',
+        username: $scope.toUserData.name
+      };
+
+      $scope.user = {
+        _id: $scope.userData.userId,
+        pic: 'http://ionicframework.com/img/docs/mcfly.jpg',
+        username: $scope.userData.name
+      };
+
+      console.log($scope.user);
+
+      //User chat initialisation
+      var initChat = function(){
+        //Fet
+        socket.emit('old messages', {userId : $scope.toUserData.userId});
+
+        socket.on('old message', function(data){
+          console.log('Old Messages received', data);
+          //UserMessagesDataService.setUserMessagesData();
+        });
+      };
+
+      //initChat();
+
+      ionic.Platform.ready(function() {
+        $rootScope.$on('$stateChangeStart', function (event, toState, toParams, fromState, fromParams) {
+          console.log('User Messages State change start');
+          console.log(toState.name);
+          if(toState.name == 'chat'){
+            console.log('chat launched');
+            //initChat();
+          }
+        });
+
+        $rootScope.$on('$stateChangeSuccess', function (event, toState, toParams, fromState, fromParams) {
+          console.log('User Messages State change success');
+        });
       });
 
       console.log('userData : ', $scope.userData);
 
-      var joinData = {userId : $scope.userData.userId};
+      /*var joinData = {userId : $scope.userData.userId};
 
       console.log(joinData);
 
@@ -599,11 +636,12 @@ angular.module('controllers', [])
         //Add user called nickname
         //socket.emit('',’nickname’);
         console.log('Socket Connected');
-      })
+      })*/
 
-      $scope.$on('locationChangeStart', function(event){
+      /*$scope.$on('locationChangeStart', function(event){
         socket.disconnect(true);
-      })
+      })*/
+
 
 
 
@@ -622,25 +660,12 @@ angular.module('controllers', [])
         username: 'Marty'
       };*/
 
-      // toUser data received from the $stateParams
-      $scope.toUser = {
-        _id: $scope.toUserId,
-        pic: 'http://ionicframework.com/img/docs/venkman.jpg',
-        username: $scope.toUserData.name
-      }
-
-      $scope.user = {
-        _id: $scope.userData.userId,
-        pic: 'http://ionicframework.com/img/docs/mcfly.jpg',
-        username: $scope.userData.name
-      };
-
-      console.log($scope.user);
 
 
-      $scope.input = {
+
+      /*$scope.input = {
         message: localStorage['userMessage-' + $scope.toUser._id] || ''
-      };
+      };*/
 
       var messageCheckTimer;
 
@@ -651,6 +676,19 @@ angular.module('controllers', [])
 
       $scope.$on('$ionicView.enter', function() {
         console.log('UserMessages $ionicView.enter');
+
+        var rudderData = UserService.getRudderData();
+
+        //start socket connection here
+        socket.emit('join', {
+          userId: rudderData.userId
+        }, function (result) {
+          if (!result) {
+            console.log('There was an error joining user');
+          } else {
+            console.log("User joined");
+          }
+        });
 
         getMessages();
 
@@ -682,23 +720,34 @@ angular.module('controllers', [])
 
       function getMessages() {
         // the service is mock but you would probably pass the toUser's GUID here
-        MockService.getUserMessages({
-          toUserId: $scope.toUser._id
-        }).then(function(data) {
+        MockService.getUserMessages(
+          $scope.toUser._id
+        ).then(function(data) {
           $scope.doneLoading = true;
           $scope.messages = data.messages;
-
+          $scope.msgLog = data.messages;
+          console.log('returned get message data', data);
           $timeout(function() {
             viewScroll.scrollBottom();
           }, 0);
         });
       }
 
-      $scope.$watch('input.message', function(newValue, oldValue) {
+      /*function setMessages(msgData) {
+        // the service is mock but you would probably pass the toUser's GUID here
+        MockService.setUserMessages(
+          $scope.toUser._id, msgData
+        ).then(function(data) {
+
+          getMessages();
+        });
+      }*/
+
+      /*$scope.$watch('input.message', function(newValue, oldValue) {
         console.log('input.message $watch, newValue ' + newValue);
         if (!newValue) newValue = '';
         localStorage['userMessage-' + $scope.toUser._id] = newValue;
-      });
+      });*/
 
       $scope.sendMessage = function(sendMessageForm) {
         /*var message = {
@@ -706,13 +755,70 @@ angular.module('controllers', [])
           text: $scope.input.message
         };*/
 
+
         var message = {
           timestamp : new Date(),
           message: $scope.input.message,
-          to_id: $scope.toUser._id
+          _id: $scope.toUser._id
         };
 
-        socket.emit('send message', message);
+        //console.log('senMessage emitting.');
+
+        socket.emit('send message', message , function (result) {
+          console.log('senMessage emiited.');
+          if (!result) {
+            console.log('There was an error sending message');
+          } else {
+            console.log("Message sent");
+          }
+        });
+
+
+
+
+        //console.log('UserMEssages value :',UserMessagesDataService.getUserMessagesData($scope.toUser._id, messages));
+
+        //UserMessagesDataService.setUserMessagesData($scope.toUser._id, messages);
+
+          console.log('msgLog',$scope.msgLog);
+          if ($scope.msgLog !== undefined) {
+            console.log('message data defined');
+            console.log($scope.msgLog);
+            $scope.msgLog.push(message);
+            UserMessagesDataService.setUserMessagesData($scope.toUser._id, $scope.msgLog);
+
+            //setMessages($scope.toUser._id, msgLog);
+
+
+          }
+          else{
+            console.log('message data undefined');
+            UserMessagesDataService.setUserMessagesData($scope.toUser._id, {messages : [message]});
+            console.log($scope.msgLog);
+            //setMessages($scope.toUser._id, {messages : [message]});
+          }
+
+          getMessages();
+
+        /*if(isEmpty(UserMessagesDataService.getUserMessagesData($scope.toUser._id))){
+          console.log('Empty');
+          UserMessagesDataService.setUserMessagesData($scope.toUser._id, message);
+          console.log('Messages:',UserMessagesDataService.getUserMessagesData($scope.toUser._id));
+
+          $scope.messages = UserMessagesDataService.getUserMessagesData($scope.toUser._id);
+        }
+        else{
+          console.log('Not Empty');
+
+          var messageLog = UserMessagesDataService.getUserMessagesData($scope.toUser._id);
+          messageLog.push(message);
+          UserMessagesDataService.setUserMessagesData($scope.toUser._id, messageLog);
+          console.log('Messages:',UserMessagesDataService.getUserMessagesData($scope.toUser._id));
+
+          $scope.messages = UserMessagesDataService.getUserMessagesData($scope.toUser._id);
+        }*/
+
+        //$scope.messages = UserMessagesDataService.getUserMessagesData($scope.toUser._id);
 
         $scope.input.message = '';
 

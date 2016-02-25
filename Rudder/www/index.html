@@ -312,7 +312,7 @@
         <div class="col col-33" ng-repeat="list in row" ng-init="colIndex = $index" ng-click="openModal(list, colIndex, rowIndex, 'slideInUp')">
           <div class="card card-guests margin-0">
             <div class="item item-borderless item-avatar-center">
-              <img src="img/avatar.jpg" />
+              <img ng-src="{{'http://graph.facebook.com/' + list.userId + '/picture?type=large'}}">
               <h2 ng-bind="list.name"></h2>
               <p ng-bind=""></p>
             </div>
@@ -416,39 +416,58 @@
       <div ng-repeat="message in messages" class="message-wrapper"
            on-hold="onMessageHold($event, $index, message)">
 
-        <div ng-if="user._id !== message.userId">
+      <!--  <div>
 
           <img ng-click="viewProfile(message)" class="profile-pic left"
                ng-src="{{toUser.pic}}" onerror="onProfilePicError(this)" />
 
           <div class="chat-bubble left">
 
-            <div class="message" ng-bind-html="message.text | nl2br" autolinker>
+            <div class="message" ng-bind-html="message.message | nl2br" autolinker>
             </div>
 
             <div class="message-detail">
                               <span ng-click="viewProfile(message)"
                                     class="bold">{{toUser.username}}</span>,
-              <span am-time-ago="message.date"></span>
+              <span am-time-ago="message.timestamp"></span>
+            </div>
+
+          </div>
+        </div>-->
+
+        <div ng-if="user._id === message._id">
+
+          <img ng-click="viewProfile(message)" class="profile-pic left"
+               ng-src="{{toUser.pic}}" onerror="onProfilePicError(this)" />
+
+          <div class="chat-bubble left">
+
+            <div class="message" ng-bind-html="message.message | nl2br" autolinker>
+            </div>
+
+            <div class="message-detail">
+                              <span ng-click="viewProfile(message)"
+                                    class="bold">{{toUser.username}}</span>,
+              <span am-time-ago="message.timestamp"></span>
             </div>
 
           </div>
         </div>
 
-        <div ng-if="user._id === message.userId">
+        <div ng-if="user._id !== message._id">
 
           <img ng-click="viewProfile(message)" class="profile-pic right"
                ng-src="{{user.pic}}" onerror="onProfilePicError(this)" />
 
           <div class="chat-bubble right">
 
-            <div class="message" ng-bind-html="message.text | nl2br" autolinker>
+            <div class="message" ng-bind-html="message.message | nl2br" autolinker>
             </div>
 
             <div class="message-detail">
                               <span ng-click="viewProfile(message)"
                                     class="bold">{{user.username}}</span>,
-              <span am-time-ago="message.date"></span>
+              <span am-time-ago="message.timestamp"></span>
             </div>
 
           </div>
