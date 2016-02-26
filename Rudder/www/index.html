@@ -429,7 +429,7 @@
           </div>
         </div>-->
 
-        <div ng-if="user._id === message._id">
+        <div ng-if="user._id !== message._id">
 
           <img ng-click="viewProfile(message)" class="profile-pic left"
                ng-src="{{toUser.pic}}" onerror="onProfilePicError(this)" />
@@ -448,7 +448,7 @@
           </div>
         </div>
 
-        <div ng-if="user._id !== message._id">
+        <div ng-if="user._id === message._id">
 
           <img ng-click="viewProfile(message)" class="profile-pic right"
                ng-src="{{user.pic}}" onerror="onProfilePicError(this)" />

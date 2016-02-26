@@ -62,7 +62,12 @@ angular.module('services', [])
   })
 
 .factory('socket', function ($rootScope) {
-  var socket = io.connect('http://192.168.0.104:8080/message');
+  var socket = io.connect('http://192.168.0.104:8080/');
+
+  socket.on('connection', function (message) {
+    console.log('connnecte', message);
+  });
+
   return {
     on: function (eventName, callback) {
       socket.on(eventName, function () {

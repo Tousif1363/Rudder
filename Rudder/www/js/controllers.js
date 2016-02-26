@@ -39,7 +39,6 @@ angular.module('controllers', [])
 
     ionic.Platform.ready(function() {
       $scope.user = UserService.getUser();
-
     });
 
     /*$rootScope.$on('$stateChangeStart', function(event, toState){
@@ -129,9 +128,6 @@ angular.module('controllers', [])
 
     /*ChatListDataService.setChatListData([{friendName: 'Pritam', lastMsg : 'Hello guys , wassup?'}, {friendName: 'Rakesh', lastMsg : 'App in making?'},
       {friendName: 'Ved', lastMsg : 'Backend is up'}, {friendName: 'Manasvi', lastMsg : 'I repeat backend is up'}, {friendName: 'Hemant', lastMsg : 'UI le le'}]);*/
-    console.log(EventGuestsDataService.getEventGuestsData());
-    console.log(ChatListDataService.getChatListData());
-
   })
 
   .controller('HomeCtrl', function($scope, UserService, $ionicActionSheet, $state, $ionicLoading){
@@ -696,7 +692,7 @@ angular.module('controllers', [])
         getMessages();
 
         socket.on('new message', function (message) {
-
+          console.log('New message received by',$scope.user);
           console.log('msgLog',$scope.msgLog);
           if ($scope.msgLog !== undefined) {
             console.log('new message data defined');
@@ -772,15 +768,22 @@ angular.module('controllers', [])
       });*/
 
       $scope.sendMessage = function(sendMessageForm) {
-        var message = {
+        var messageToServer = {
           timestamp : new Date(),
           message: $scope.input.message,
           _id: $scope.toUser._id
         };
 
+        var message = {
+          timestamp : new Date(),
+          message: $scope.input.message,
+          _id: $scope.user._id
+        };
+
         //console.log('senMessage emitting.');
 
-        socket.emit('send message', message , function (result) {
+        socket.emit('send message', messageToServer , function (result) {
+          console.log('New message emitted by',$scope.user);
           console.log('senMessage emiited.');
           if (!result) {
             console.log('There was an error sending message');
@@ -788,16 +791,6 @@ angular.module('controllers', [])
             console.log("Message sent");
           }
         });
-
-
-
-
-
-
-
-        //console.log('UserMEssages value :',UserMessagesDataService.getUserMessagesData($scope.toUser._id, messages));
-
-        //UserMessagesDataService.setUserMessagesData($scope.toUser._id, messages);
 
           console.log('msgLog',$scope.msgLog);
           if ($scope.msgLog !== undefined) {
