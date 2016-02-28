@@ -106,6 +106,7 @@ img.profile-pic.right {
 }
 
 .chat-bubble.right {
+  /*background-color: #e6e5eb;*/
   background-color: #158ffe;
   color: #fff;
   float: right;
@@ -410,6 +411,19 @@ a.autolinker {
 .modal-body{
   height: auto;
   overflow-y: scroll;
+}
+
+.icon-friend-request{
+  color: green;
+}
+
+.icon-friend-request.button:hover {
+  color: green;
+}
+
+.icon-friend-request.button.active, .icon-friend-request.button.activated {
+  border-color: green;
+  background-color: green;
 }
 
 /* Rudder Splash CSS */

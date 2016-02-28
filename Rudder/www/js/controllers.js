@@ -1,18 +1,32 @@
 angular.module('controllers', [])
 
-  .controller('RudderCtrl', function($scope, UserService, LoginService){
+  .controller('RudderCtrl', function($scope, $state, UserService, LoginService){
     console.log('Rudder');
 
 
     $scope.checkUserLoginStatus = function() {
-      if (UserService.getUser() !== null) {
-        console.log('Rudder user data is set');
-        LoginService.facebookSignIn();
-      }
-      else {
-        console.log('User null, should not be here');
-      }
-    }
+      $scope.user = {};
+      //getUser
+      UserService.getUser().then(function(response){
+        console.log('RudderCtrl',response);
+        $scope.user = response;
+
+        if (!jQuery.isEmptyObject($scope.user)) {
+          console.log('Rudder user data is set');
+          LoginService.facebookSignIn();
+        }
+        else {
+          console.log('User null, should not be here');
+          $state.go('welcome');
+        }
+
+      },function(response){
+        //User data fetch failure
+      });
+
+
+
+    };
 
     ionic.Platform.ready(function() {
       $scope.checkUserLoginStatus();
@@ -38,101 +52,31 @@ angular.module('controllers', [])
     console.log('Set user data here');
 
     ionic.Platform.ready(function() {
-      $scope.user = UserService.getUser();
+      UserService.getUser().then(function(response){
+        $scope.user =response;
+      },function(response){
+        //User data fetch failure
+      });
+
+
+
+      UserService.getRudderData().then(function(response){
+        $scope.rudderData = response;
+      },function(response){
+        //gerRudderData fetch failure
+      });
+
+
     });
-
-    /*$rootScope.$on('$stateChangeStart', function(event, toState){
-      console.log('Starting state change');
-      console.log(toState);
-
-      // Would print "Hello World!" when 'parent' is activated
-      // Would print "Hello UI-Router!" when 'parent.child' is activated
-    });
-
-    $rootScope.$on('$stateChangeSuccess', function (event, toState, toParams, fromState, fromParams) {
-      console.log('State change success');
-    });*/
-
-    /*EventsService.setEventsData([{
-      eventName : "Jimmy's Pub",
-      eventType : 'public',
-      category : 'pub',
-      distance : '0.1 km' ,
-      usersCheckedIn : 20
-    },
-      {
-        eventName : "Costa Coffee",
-        eventType : 'public',
-        category :'cafe',
-        distance : '0.2 km' ,
-        usersCheckedIn : 30
-      },
-      {
-        eventName : "Naturals",
-        eventType : 'public',
-        category :'ic',
-        distance : '0.2 km' ,
-        usersCheckedIn : 5
-      },
-      {
-        eventName : "TechDisrupt",
-        eventType : 'public',
-        category :'tech',
-        distance : '0.4 km' ,
-        usersCheckedIn : 37
-      },
-      {
-        eventName : "Paradise",
-        eventType : 'public',
-        category :'restaurant',
-        distance : '0.4 km' ,
-        usersCheckedIn : 2
-      }]);*/
-
-    /*EventGuestsDataService.setEventGuestsData(
-     [
-     [{
-     guestName : 'Hemant',
-     guestTitle : 'UX/UI designer at Stayglad',
-     },
-     {
-     guestName : 'Tousif',
-     guestTitle : 'HMI developer at Harman',
-     },
-     {
-     guestName : 'Ved',
-     guestTitle : 'Big data expert at Oracle',
-     }],
-     [
-     {
-     guestName : 'Raj',
-     guestTitle : 'Market research Analyst at SBD',
-     },
-     {
-     guestName : 'Bhaskar',
-     guestTitle : 'UX/UI designer at Stayglad',
-     },
-     {
-     guestName : 'Manasvi',
-     guestTitle : 'UX/UI designer at Stayglad',
-     }],[
-     {
-     guestName : 'Rakesh',
-     guestTitle : 'UX/UI designer at Stayglad',
-     },
-     {
-     guestName : 'Pritam',
-     guestTitle : 'UX/UI designer at Stayglad',
-     }]
-     ]);*/
-
-    /*ChatListDataService.setChatListData([{friendName: 'Pritam', lastMsg : 'Hello guys , wassup?'}, {friendName: 'Rakesh', lastMsg : 'App in making?'},
-      {friendName: 'Ved', lastMsg : 'Backend is up'}, {friendName: 'Manasvi', lastMsg : 'I repeat backend is up'}, {friendName: 'Hemant', lastMsg : 'UI le le'}]);*/
   })
 
   .controller('HomeCtrl', function($scope, UserService, $ionicActionSheet, $state, $ionicLoading){
 
-    $scope.user = UserService.getUser();
+    UserService.getUser().then(function(response){
+      $scope.user =response;
+    },function(response){
+      //User data fetch failure
+    });
 
     $scope.showLogOutMenu = function() {
       var hideSheet = $ionicActionSheet.show({
@@ -202,50 +146,61 @@ angular.module('controllers', [])
         }
       } ;
 
-      var token = TokenService.getUserToken();
-      console.log('nearbyPlaces Token',token);
+      var token = {};
 
-      if(token.ruderToken){
-        $cordovaGeolocation.getCurrentPosition(posOptions).then(function (position) {
-        var lat  = position.coords.latitude;
-        var long = position.coords.longitude;
-        var params = {ruderToken: token.ruderToken ,lat : lat, lon: long};
-        console.log(token.ruderToken);
-        console.log(lat);
-        console.log(long);
-        console.log(params);
+      TokenService.getUserToken().then(function(response){
+        token = response;
+
+        console.log('nearbyPlaces Token',token);
+
+        if(token.ruderToken){
+          $cordovaGeolocation.getCurrentPosition(posOptions).then(function (position) {
+            var lat  = position.coords.latitude;
+            var long = position.coords.longitude;
+            var params = {ruderToken: token.ruderToken ,lat : lat, long: long};
+            console.log(token.ruderToken);
+            console.log(lat);
+            console.log(long);
+            console.log(params);
 
 
-        //After the lat and long is received from gps , request for the events data
-        //getNearbyPlaces will return the list of events on passing the ruder token
-        $http.get('http://192.168.0.104:8080/placefinder/getnearbyplaces', {params : params})
-          .success(function(data, status, headers, config) {
-            console.log('nearby places data success', data);
-            if(data.hasOwnProperty('success') && data.success === true){
-              //console.log('Succeess nearby places data');
-              if(data.hasOwnProperty('places')){
-                EventsService.setEventsData(data.places);
-                $scope.items = data.places;
-              }
-            }
+            //After the lat and long is received from gps , request for the events data
+            //getNearbyPlaces will return the list of events on passing the ruder token
+            $http.get('http://192.168.1.112:8080/placefinder/getnearbyplaces', {params : params})
+              .success(function(data, status, headers, config) {
+                console.log('nearby places data success', data);
+                if(data.hasOwnProperty('success') && data.success === true){
+                  //console.log('Succeess nearby places data');
+                  if(data.hasOwnProperty('places')){
+                    EventsService.setEventsData(data.places).then(function (response) {
+                        $scope.items = data.places;
+                      },
+                      function(response){
 
+                      });
+                  }
+                }
+
+                $ionicLoading.hide();
+
+              })
+              .error(function (data, status, header, config){
+                console.log('nearby places data failure', data);
+                $state.go('menu.tabs.discover');
+                EventsService.setEventsData({});
+
+                $ionicLoading.hide();
+
+              });
+
+          }, function(err) {
             $ionicLoading.hide();
-
-          })
-          .error(function (data, status, header, config){
-            console.log('nearby places data failure', data);
-            $state.go('menu.tabs.discover');
-            EventsService.setEventsData({});
-
-            $ionicLoading.hide();
-
+            console.log(err);
           });
+        }
 
-      }, function(err) {
-        $ionicLoading.hide();
-        console.log(err);
       });
-      }
+
     };
 
     getNearbyPlaces();
@@ -257,20 +212,31 @@ angular.module('controllers', [])
     $scope.hosts = [{hostName: 'Tousif'},{hostName: 'Ved'}, {hostName: 'Rakesh'}];
 
     $scope.showPopupIfNotCheckedIn = function(index){
-      var rudderData = UserService.getRudderData();
       console.log('In Checkin');
-      if(rudderData.checkIn.status === true) {
-        $scope.index = index;
-        if ($scope.items[index].id === rudderData.checkIn.whereId) {
-          EventsService.checkInEvent($scope.items[index].id);
+      var rudderData = {};
+        UserService.getRudderData().then(function(response) {
+          rudderData = response;
+          console.log('rudderData at check in', rudderData);
+        if(rudderData.hasOwnProperty('checkIn') && rudderData.checkIn.hasOwnProperty('status'))
+        {
+          if(rudderData.checkIn.status === true) {
+            $scope.index = index;
+            if ($scope.items[index].id === rudderData.checkIn.whereId) {
+              EventsService.checkInEvent($scope.items[index].id, $scope.items[index].name);
+            }
+            else{
+              $scope.showAlert(index);
+            }
+          }
+          else {
+            $scope.showAlert(index);
+          }
         }
-        else{
-          $scope.showAlert(index);
-        }
-      }
-      else {
-        $scope.showAlert(index);
-      }
+      }, function(response) {
+
+      });
+
+
       };
 
 
@@ -287,7 +253,7 @@ angular.module('controllers', [])
         if(res){
           //$state.go('menu.tabs.eventDetails');
           //console.log($scope.items[index].id);
-          EventsService.checkInEvent($scope.items[index].id);
+          EventsService.checkInEvent($scope.items[index].id, $scope.items[index].name);
 
           console.log('You wish to join the event :)');
         }
@@ -304,6 +270,17 @@ angular.module('controllers', [])
       {guestName : 'Ved', guestTitle : 'Big data expert at Oracle'},{guestName : 'Raj', guestTitle : 'Market research Analyst at SBD'},
       {guestName : 'Bhaskar',guestTitle : 'UX/UI designer at Stayglad'},{guestName : 'Manasvi',guestTitle : 'UX/UI designer at Stayglad'},
       {guestName : 'Rakesh', guestTitle : 'UX/UI designer at Stayglad'},{guestName : 'Pritam',guestTitle : 'UX/UI designer at Stayglad'}];*/
+    $scope.rudderData = {};
+    UserService.getRudderData().then(function(response){
+      $scope.rudderData = response;
+    },
+    function(response){
+      //Failed fetching getRudderData()
+    });
+
+    $scope.placeName = JSON.parse(localStorage.getItem("placeName"));
+
+
     $scope.data = EventGuestsDataService.getEventGuestsData();
     $scope.grid = [];
     $scope.numCols = 3;
@@ -351,25 +328,31 @@ angular.module('controllers', [])
 
         $ionicLoading.show();
 
-        var token = TokenService.getUserToken().ruderToken;
-        var data = {ruderToken : token, receiverId : followUserId};
-        //Notify the server to follow user
-        $http.post('http://192.168.0.104:8080/follow ', data)
-          .success(function(data, status, headers, config) {
-            if(data.hasOwnProperty('success') && data.success === true){
-              console.log('follow success', data);
-              if(data.hasOwnProperty('following')){
-                UserService.setRudderData(data.following);
-              }
-            }
-            $scope.currentUserFollowStatus = true;
-            $ionicLoading.hide();
-          })
-          .error(function (data, status, header, config){
-            console.log('follow failure', data);
-            $scope.currentUserFollowStatus = false;
-            $ionicLoading.hide();
-          });
+        var token = {};
+        TokenService.getUserToken().then(function(){
+          token = response;
+          if(!jQuery.isEmptyObject(token)) {
+            var data = {ruderToken: token.ruderToken, receiverId: followUserId};
+            //Notify the server to follow user
+            $http.post('http://192.168.1.112:8080/follow ', data)
+              .success(function (data, status, headers, config) {
+                if (data.hasOwnProperty('success') && data.success === true) {
+                  console.log('follow success', data);
+                  if (data.hasOwnProperty('following')) {
+                    UserService.setRudderData(data.following);
+                  }
+                }
+                $scope.currentUserFollowStatus = true;
+                $ionicLoading.hide();
+              })
+              .error(function (data, status, header, config) {
+                console.log('follow failure', data);
+                $scope.currentUserFollowStatus = false;
+                $ionicLoading.hide();
+              });
+          }
+        });
+
 
 
 
@@ -534,9 +517,43 @@ angular.module('controllers', [])
     });
   })
 
-  .controller('ChatListDataCtrl', function($scope, $state, FriendsDataService){
-    $scope.chatList = FriendsDataService.getFriendsData();
+  .controller('ChatListDataCtrl', function($scope, $state, $http ,$ionicLoading, TokenService){
+    $scope.chatList = {};
     console.log('Chat List');
+
+    $scope.$on('$ionicView.enter', function() {
+      console.log('ChatListDataCtrl $ionicView.enter');
+
+
+        var token = {};
+        TokenService.getUserToken().then(function(response) {
+          token = response;
+
+          console.log('chatListDataHelper token', token);
+
+          var params = {ruderToken: token.ruderToken};
+          console.log('chatListDataHelper params', params);
+
+          console.log(params);
+          $ionicLoading.show();
+
+          $http.post('http://192.168.1.112:8080/friendlist', {ruderToken: token.ruderToken})
+            .success(function (data, status, headers, config) {
+              console.log('friendlist data success', data);
+              $scope.chatList = data.friends;
+
+              $ionicLoading.hide();
+
+            })
+            .error(function (data, status, header, config) {
+              console.log('friendlist data failure', data);
+
+
+              $ionicLoading.hide();
+            });
+        });
+
+    });
 
     $scope.joinChat = function(id){
 
@@ -571,49 +588,48 @@ angular.module('controllers', [])
              $ionicPopup, $ionicScrollDelegate, $timeout, $interval, socket, UserService, FriendsDataService, UserMessagesDataService, ChatService) {
 
       console.log('user id is:',$stateParams.id);
-      $scope.userData = UserService.getRudderData();
-      console.log($scope.userData);
-      $scope.toUserId = $stateParams.id;
-      $scope.friendsData = FriendsDataService.getFriendsData();
+      $scope.userData = {};
 
-      console.log('Friends data:', $scope.friendsData);
-      console.log('User id :', $scope.toUserId);
+      UserService.getRudderData().then(function(response){
+        $scope.userData = response;
+        console.log($scope.userData);
 
-      for (i = 0; i < $scope.friendsData.length; i++) {
-        if($scope.friendsData[i].userId === $scope.toUserId){
-          console.log('Equal found');
-          $scope.toUserData = $scope.friendsData[i];
-          console.log('toUserData', $scope.toUserData);
+        $scope.toUserId = $stateParams.id;
+        $scope.friendsData = FriendsDataService.getFriendsData();
+
+        console.log('Friends data:', $scope.friendsData);
+        console.log('User id :', $scope.toUserId);
+
+        for (i = 0; i < $scope.friendsData.length; i++) {
+          if($scope.friendsData[i].userId === $scope.toUserId){
+            console.log('Equal found');
+            $scope.toUserData = $scope.friendsData[i];
+            console.log('toUserData', $scope.toUserData);
+          }
         }
-      }
 
-      // toUser data received from the $stateParams
-      $scope.toUser = {
-        _id: $scope.toUserId,
-        pic: 'http://ionicframework.com/img/docs/venkman.jpg',
-        username: $scope.toUserData.name
-      };
+        // toUser data received from the $stateParams
+        $scope.toUser = {
+          _id: $scope.toUserId,
+          pic: 'http://ionicframework.com/img/docs/venkman.jpg',
+          username: $scope.toUserData.name
+        };
 
-      $scope.user = {
-        _id: $scope.userData.userId,
-        pic: 'http://ionicframework.com/img/docs/mcfly.jpg',
-        username: $scope.userData.name
-      };
+        $scope.input = {
+          message: localStorage['userMessageLast-' + $scope.toUser._id] || ''
+        };
 
-      console.log($scope.user);
+        $scope.user = {
+          _id: $scope.userData.userId,
+          pic: 'http://ionicframework.com/img/docs/mcfly.jpg',
+          username: $scope.userData.name
+        };
 
-      //User chat initialisation
-      var initChat = function(){
-        //Fet
-        socket.emit('old messages', {userId : $scope.toUserData.userId});
+        console.log('User :',$scope.user);
+        console.log('to user :',$scope.toUser);
 
-        socket.on('old message', function(data){
-          console.log('Old Messages received', data);
-          //UserMessagesDataService.setUserMessagesData();
-        });
-      };
 
-      //initChat();
+      });
 
       ionic.Platform.ready(function() {
         $rootScope.$on('$stateChangeStart', function (event, toState, toParams, fromState, fromParams) {
@@ -621,7 +637,6 @@ angular.module('controllers', [])
           console.log(toState.name);
           if(toState.name == 'chat'){
             console.log('chat launched');
-            //initChat();
           }
         });
 
@@ -633,50 +648,6 @@ angular.module('controllers', [])
 
       });
 
-      console.log('userData : ', $scope.userData);
-
-      /*var joinData = {userId : $scope.userData.userId};
-
-      console.log(joinData);
-
-      socket.emit('join', joinData);
-
-
-      socket.on('connect',function(){
-        //Add user called nickname
-        //socket.emit('',’nickname’);
-        console.log('Socket Connected');
-      })*/
-
-      /*$scope.$on('locationChangeStart', function(event){
-        socket.disconnect(true);
-      })*/
-
-
-
-
-      /*
-      // mock acquiring data via $stateParams
-      $scope.toUser = {
-        _id: '534b8e5aaa5e7afc1b23e69b',
-        pic: 'http://ionicframework.com/img/docs/venkman.jpg',
-        username: 'Venkman'
-      }
-
-      // this could be on $rootScope rather than in $stateParams
-      $scope.user = {
-        _id: '534b8fb2aa5e7afc1b23e69c',
-        pic: 'http://ionicframework.com/img/docs/mcfly.jpg',
-        username: 'Marty'
-      };*/
-
-
-
-
-      /*$scope.input = {
-        message: localStorage['userMessage-' + $scope.toUser._id] || ''
-      };*/
-
       var messageCheckTimer;
 
       var viewScroll = $ionicScrollDelegate.$getByHandle('userMessageScroll');
@@ -686,28 +657,28 @@ angular.module('controllers', [])
 
       $scope.$on('$ionicView.enter', function() {
         console.log('UserMessages $ionicView.enter');
+        //TODO : not aynsch
+        var rudderData = {};
+        UserService.getRudderData().then(function(response){
+          socket.on('new message', function (message) {
+            console.log('New message received by',$scope.user);
+            console.log('msgLog',$scope.msgLog);
+            if ($scope.msgLog !== undefined) {
+              console.log('new message data defined');
+              console.log($scope.msgLog);
+              $scope.msgLog.push(message);
+              UserMessagesDataService.setUserMessagesData($scope.toUser._id, {messages : $scope.msgLog});
+            }
+            else{
+              console.log('new message data undefined');
+              UserMessagesDataService.setUserMessagesData($scope.toUser._id, {messages : [message]});
+              console.log($scope.msgLog);
+              //setMessages($scope.toUser._id, {messages : [message]});
+            }
 
-        var rudderData = UserService.getRudderData();
+            getMessages();
+        });
 
-        getMessages();
-
-        socket.on('new message', function (message) {
-          console.log('New message received by',$scope.user);
-          console.log('msgLog',$scope.msgLog);
-          if ($scope.msgLog !== undefined) {
-            console.log('new message data defined');
-            console.log($scope.msgLog);
-            $scope.msgLog.push(message);
-            UserMessagesDataService.setUserMessagesData($scope.toUser._id, {messages : $scope.msgLog});
-          }
-          else{
-            console.log('new message data undefined');
-            UserMessagesDataService.setUserMessagesData($scope.toUser._id, {messages : [message]});
-            console.log($scope.msgLog);
-            //setMessages($scope.toUser._id, {messages : [message]});
-          }
-
-          getMessages();
         });
 
         $timeout(function() {
@@ -732,7 +703,7 @@ angular.module('controllers', [])
 
       $scope.$on('$ionicView.beforeLeave', function() {
         if (!$scope.input.message || $scope.input.message === '') {
-          //localStorage.removeItem('userMessage-' + $scope.toUser._id);
+          localStorage.removeItem('userMessageLast-' + $scope.toUser._id);
         }
       });
 
@@ -764,7 +735,7 @@ angular.module('controllers', [])
       /*$scope.$watch('input.message', function(newValue, oldValue) {
         console.log('input.message $watch, newValue ' + newValue);
         if (!newValue) newValue = '';
-        localStorage['userMessage-' + $scope.toUser._id] = newValue;
+        localStorage['userMessageLast-' + $scope.toUser._id] = newValue;
       });*/
 
       $scope.sendMessage = function(sendMessageForm) {
@@ -812,8 +783,6 @@ angular.module('controllers', [])
 
           getMessages();
 
-        $scope.input.message = '';
-
 
         // if you do a web service call this will be needed as well as before the viewScroll calls
         // you can't see the effect of this in the browser it needs to be used on a real device
@@ -824,6 +793,8 @@ angular.module('controllers', [])
           keepKeyboardOpen();
           viewScroll.scrollBottom(true);
         }, 0);
+
+        $scope.input.message = '';
 
         /*MockService.sendMessage(message).then(function(data) {
         $scope.input.message = '';

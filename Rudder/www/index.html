@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, width=device-width">
-  <meta http-equiv="Content-Security-Policy" content="default-src *; script-src 'self' 'unsafe-inline' 'unsafe-eval' *; style-src  'self' 'unsafe-inline' *">
+  <meta http-equiv="Content-Security-Policy" content="default-src *; script-src &apos;self&apos; &apos;unsafe-inline&apos; &apos;unsafe-eval&apos; *; style-src  &apos;self&apos; &apos;unsafe-inline&apos; *">
   <title></title>
 
 
@@ -30,7 +30,7 @@
 
   <!--<script src='lib/facebook-connect-plugin/index.js'></script>-->
 
-  <script src="http://192.168.0.104:8080/socket.io/socket.io.js"></script>
+  <script src="http://192.168.1.112:8080/socket.io/socket.io.js"></script>
 
   <!-- Other Libraries-->
   <script src="lib/angular-sanitize/angular-sanitize.min.js"></script>
@@ -56,7 +56,7 @@
       <ion-content class="background-color-ruder">
         <div class="card card-profile">
           <div class="item item-avatar-center-big">
-            <img ng-src="{{'http://graph.facebook.com/' + user.userID + '/picture?type=small'}}">
+            <img ng-src="{{'http://graph.facebook.com/' + user.userID + '/picture?type=large'}}">
             <h2 ng-bind="user.name"></h2>
             <p>Entre</p>
           </div>
@@ -121,10 +121,10 @@
     <ion-content class="background-color-ruder">
       <div class="row">
         <div class="col">
-          <img src="img/avatar.jpg" class="profile-picture-main">
-          <h2 class="profile-name">Tousif Ahmed</h2>
-          <p class="profile-title">Entrepreneur</p>
-          <p class="profile-caption">I will leave a legacy...</p>
+          <img ng-src="{{'http://graph.facebook.com/' + user.userID + '/picture?type=large'}}" class="profile-picture-main">
+          <h2 class="profile-name" ng-bind="user.name"></h2>
+          <p class="profile-title">Title</p>
+          <p class="profile-caption">Caption</p>
           <div class="row">
             <div class="col col-25 col-offset-25">
               <p class="lg-red">22</p>
@@ -218,17 +218,16 @@
   <ion-modal-view class="transparent modal modal-dialog">
     <div class="card card-guests-detail margin-0 transparent" on-swipe-left="onSwipeLeft()" on-swipe-right="onSwipeRight()">
       <div class="item item-avatar-center-big transparent">
-        <img src="img/avatar.jpg">
+        <img ng-src="{{'http://graph.facebook.com/' + item.fbId + '/picture?type=large'}}">
         <div class="custom-placeholder">
           <br><br><br>
           <h2>{{item.name}}</h2>
           <p>{{}}</p>
           <div class="row" style="margin: -30px 0px -20px 0px;">
             <div class = "col-20 col-offset-80">
-              <button class="button button-icon ion-person-add icon-friend-request" ng-if="currentUserFollowStatus === true">
-              </button>
-              <button class="button button-icon ion-person-add" ng-if="currentUserFollowStatus === false" ng-click="follow(item.userId)">
-              </button>
+              <img src="img/requestAdd.png" style="height: 32px;width: 32px;" ng-if="true">
+             <!-- <img src="img/requestSent.png" style="height: 32px;width: 32px;" ng-if="">
+              <img src="img/requestAccepted.png" style="height: 32px;width: 32px;" ng-if="">-->
             </div>
           </div>
         </div>
@@ -298,7 +297,7 @@
 <script id="eventDetails.html" type="text/ng-template">
   <ion-view class="background-color-grey">
     <ion-nav-title>
-      <button class="button button-icon icon ion-arrow-down-b icon-right" ng-click="openPopover($event)">TechDisrupt
+      <button class="button button-icon icon ion-arrow-down-b icon-right" ng-click="openPopover($event)">{{placeName.placeName}}
       </button>
     </ion-nav-title>
     <ion-header-bar class="bar-royal bar-subheader item-input-inset">
@@ -312,7 +311,7 @@
         <div class="col col-33" ng-repeat="list in row" ng-init="colIndex = $index" ng-click="openModal(list, colIndex, rowIndex, 'slideInUp')">
           <div class="card card-guests margin-0">
             <div class="item item-borderless item-avatar-center">
-              <img ng-src="{{'http://graph.facebook.com/' + list.userId + '/picture?type=small'}}">
+              <img ng-src="{{'http://graph.facebook.com/' + list.fbId + '/picture?type=small'}}">
               <h2 ng-bind="list.name"></h2>
               <p ng-bind=""></p>
             </div>
@@ -372,7 +371,7 @@
     <ion-content class="padding">
       <div class="list">
         <a class="item item-avatar" ng-repeat="item in chatList" ng-click="joinChat(item.userId)">
-          <img src="img/avatar.jpg">
+          <img ng-src="{{'http://graph.facebook.com/' + item.fbId + '/picture?type=small'}}">
           <h2 ng-bind="item.name"></h2>
           <!--<p ng-bind="item.lastMsg"></p>-->
         </a>
@@ -432,7 +431,7 @@
         <div ng-if="user._id !== message._id">
 
           <img ng-click="viewProfile(message)" class="profile-pic left"
-               ng-src="{{toUser.pic}}" onerror="onProfilePicError(this)" />
+               ng-src="" onerror="onProfilePicError(this)" />
 
           <div class="chat-bubble left">
 
@@ -451,7 +450,7 @@
         <div ng-if="user._id === message._id">
 
           <img ng-click="viewProfile(message)" class="profile-pic right"
-               ng-src="{{user.pic}}" onerror="onProfilePicError(this)" />
+               ng-src="" onerror="onProfilePicError(this)" />
 
           <div class="chat-bubble right">
 
