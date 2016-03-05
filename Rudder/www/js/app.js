@@ -5,7 +5,12 @@
 // the 2nd parameter is an array of 'requires'
 angular.module('starter', ['ionic', 'controllers', 'services','monospaced.elastic', 'angularMoment', 'ngCordova', 'btford.socket-io'])
 
-  .run(function($ionicPlatform, $state, $rootScope, UserService, EventsService) {
+  .constant("SERVER_CONFIG", {
+    "url": "http://188.166.244.93",
+    "port": ""
+  })
+
+  .run(function($ionicPlatform, $state, $rootScope, $cordovaGeolocation, UserService, GeoAlert) {
     $ionicPlatform.ready(function() {
       // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
       // for form inputs)
@@ -30,15 +35,39 @@ angular.module('starter', ['ionic', 'controllers', 'services','monospaced.elasti
         }
       }
 
-      //$rootScope.$on('$stateChangeSuccess', function (event, toState, toParams, fromState, fromParams) {
-      //  console.log('State change success');
-      //  console.log(toState);
-      //  if(toState.name === 'menu.tabs.discover'){
-      //    EventsService.getNearbyPlaces();
-      //    console.log('Discover events page');
-      //
-      //  }
-      //})
+      $rootScope.$on('$cordovaNetwork:online', function(event, networkState){
+        console.log('now online');
+      });
+
+      // listen for Offline event
+      $rootScope.$on('$cordovaNetwork:offline', function(event, networkState){
+        console.log('now offline');
+      });
+
+      /*var posOptions = {
+        enableHighAccuracy: true,
+        timeout: 20000,
+        maximumAge: 0
+      };
+
+      $rootScope.targetUpdated = false;
+
+      $cordovaGeolocation.getCurrentPosition(posOptions).then(function (position) {
+        var lat  = position.coords.latitude;
+        var long = position.coords.longitude;
+        console.log('Lat onStart',lat);
+        console.log('Long onStart', long);
+
+        GeoAlert.begin(lat,long, function() {
+          console.log('TARGET');
+          $rootScope.targetUpdated = true;
+        });
+
+
+
+
+
+      });*/
 
     });
 
@@ -71,6 +100,16 @@ angular.module('starter', ['ionic', 'controllers', 'services','monospaced.elasti
         controller: 'RudderCtrl'
       })
 
+      .state('menu.notifications', {
+        url: '/notifications',
+        views: {
+          'menuContent': {
+            templateUrl: "notifications.html",
+            controller: 'NotificationCtrl'
+          }
+        }
+      })
+
       .state('welcome', {
         url: '/welcome',
         templateUrl: "welcome.html",
@@ -94,7 +133,8 @@ angular.module('starter', ['ionic', 'controllers', 'services','monospaced.elasti
         url: "/tabs",
         views: {
           'menuContent' :{
-            templateUrl: "tabs.html"
+            templateUrl: "tabs.html",
+            controller: 'TabCtrl'
           }
         }
       })

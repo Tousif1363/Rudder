@@ -16,21 +16,32 @@
   <script src="lib/ionic/js/ionic.bundle.js"></script>
 
   <!-- jQuery -->
-  <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+  <!--<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>-->
+  <script src="lib/jquery/dist/jquery.min.js"></script>
+
+
 
   <!-- moment -->
-  <script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.8.4/moment.min.js"></script>
+  <!--<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.8.4/moment.min.js"></script>-->
+  <script src="lib/moment/min/moment.min.js"></script>
+
   <!-- angular moment -->
-  <script src="//cdnjs.cloudflare.com/ajax/libs/angular-moment/0.8.2/angular-moment.min.js"></script>
+  <!--<script src="//cdnjs.cloudflare.com/ajax/libs/angular-moment/0.8.2/angular-moment.min.js"></script>-->
+  <script src="lib/angular-moment/angular-moment.min.js"></script>
+
+  <!-- For GPS location-->
+  <script src="lib/ngCordova/dist/ng-cordova.min.js"></script>
+
   <!-- cordova script (this will be a 404 during development) -->
   <script src="cordova.js"></script>
-  <!-- For GPS location-->
-  <script src="js/ng-cordova.min.js"></script>
+
+
+  <!--<script src="lib/cordova-facebook-connect-plugin/lib/cordova-facebook-connect-plugin.js"></script>-->
 
 
   <!--<script src='lib/facebook-connect-plugin/index.js'></script>-->
 
-  <script src="http://192.168.1.112:8080/socket.io/socket.io.js"></script>
+  <script src="http://188.166.244.93/socket.io/socket.io.js"></script>
 
   <!-- Other Libraries-->
   <script src="lib/angular-sanitize/angular-sanitize.min.js"></script>
@@ -58,14 +69,12 @@
           <div class="item item-avatar-center-big">
             <img ng-src="{{'http://graph.facebook.com/' + user.userID + '/picture?type=large'}}">
             <h2 ng-bind="user.name"></h2>
-            <p>Entre</p>
+            <p>Title</p>
           </div>
         </div>
         <ul class="list list-settings padding">
           <a href ="#/menu/tabs/discover" class="item item-icon-left" menu-close><i class="icon ion-location"></i>Tag place</a>
           <a href ="#/menu/home" class="item item-icon-left" menu-close><i class="icon ion-settings"></i>App Setting</a>
-          <a href="#/chat/1" class="item item-icon-left" menu-close><i class="icon ion-help-circled"></i>Help & Support</a>
-          <a href="#/menu/tabs/chatList" class="item item-icon-left" menu-close><i class="icon ion-android-share-alt"></i>Share</a>
         </ul>
       </ion-content>
     </ion-side-menu>
@@ -94,6 +103,10 @@
     <ion-nav-buttons side="left">
       <button class="button button-icon button-clear ion-navicon" menu-toggle="left"></button>
     </ion-nav-buttons>
+
+    <ion-nav-buttons side="right">
+      <button class="button button-icon button-clear ion-android-notifications-none" ng-click="showNotifications()"></button>
+    </ion-nav-buttons>
   </ion-nav-bar>
 
   <ion-tabs class="tabs-striped tabs-royal tabs-icon-only">
@@ -106,7 +119,7 @@
       <ion-nav-view name="chat-tab"></ion-nav-view>
     </ion-tab>
 
-    <ion-tab icon="ion-social-rss" ui-sref="feeds">
+    <ion-tab icon="ion-social-rss" href="/menu/tabs/feeds">
       <ion-nav-view name="feeds-tab"></ion-nav-view>
     </ion-tab>
 
@@ -135,10 +148,46 @@
               <p class="md-white">Followers</p>
             </div>
           </div>
+
+          <div class="list">
+            <label class="item item-input item-stacked-label">
+              <span class="input-label">Name</span>
+              <input type="text" ng-model="userData.name">
+            </label>
+            <label class="item item-input item-stacked-label">
+              <span class="input-label">Hyper Pitch</span>
+              <input type="text" ng-model="userData.hyperpitch" placeholder="Enter your hyperpitch here">
+            </label>
+            <button class="button button-block button-positive" ng-click="updateProfile(userData.name, userData.hyperpitch)">
+              save
+            </button>
+          </div>
+
+
           <a class="button button-assertive button-block button-outline" ng-click="showLogOutMenu()">
             Log Out
           </a>
         </div>
+      </div>
+    </ion-content>
+  </ion-view>
+</script>
+
+<script id="notifications.html" type="text/ng-template">
+  <ion-view class="notifications-view">
+    <ion-nav-title>
+      <span>Notifications</span>
+    </ion-nav-title>
+    <ion-content class="">
+      <div class="list">
+
+        <div class="item item-button-right">
+          Dummy notiifcation
+          <button class="button button-positive" ng-click="">
+            <i class="icon ion-android-done"></i>
+          </button>
+        </div>
+
       </div>
     </ion-content>
   </ion-view>
@@ -149,7 +198,7 @@
     <ion-content scroll="false">
       <div class="top-content row">
         <div class="app-copy col col-top">
-          <h1 class="app-logo">Rudder</h1>
+          <h1 class="app-logo">Vibrance</h1>
           <p class="app-tagline">
             >>Connect<<
           </p>
@@ -171,7 +220,7 @@
     <ion-content scroll="false">
       <div class="top-content row">
         <div class="app-copy col col-top">
-          <h1 class="app-logo">Ruder</h1>
+          <h1 class="app-logo">Vibrance</h1>
           <p class="app-tagline">
             Connecting people.
           </p>
@@ -189,7 +238,7 @@
 </script>
 
 <script id="discover.html" type="text/ng-template">
-  <ion-view view-title="Discover Events" class="background-color-grey">
+  <ion-view view-title="" class="background-color-grey">
     <!--<ion-header-bar class="bar-royal bar-subheader item-input-inset" position-bars-and-content>-->
       <!--<label class="item-input-wrapper">-->
         <!--<i class="icon ion-ios-search placeholder-icon"></i>-->
@@ -222,12 +271,14 @@
         <div class="custom-placeholder">
           <br><br><br>
           <h2>{{item.name}}</h2>
-          <p>{{}}</p>
+          <p>{{profileData.hyperPitch}}</p>
           <div class="row" style="margin: -30px 0px -20px 0px;">
             <div class = "col-20 col-offset-80">
-              <img src="img/requestAdd.png" style="height: 32px;width: 32px;" ng-if="true">
-             <!-- <img src="img/requestSent.png" style="height: 32px;width: 32px;" ng-if="">
-              <img src="img/requestAccepted.png" style="height: 32px;width: 32px;" ng-if="">-->
+              <img src="img/requestAdd.png" style="height: 32px;width: 32px;" ng-if="item.relation === 'stranger'" ng-click="addFriend(item.userId)">
+              <img src="img/requestSent.png" style="height: 32px;width: 32px;" ng-if="item.relation === 'sentRequest'">
+              <img src="img/requestSent.png" style="height: 32px;width: 32px;" ng-if="item.relation === 'receivedRequest'">
+
+              <img src="img/requestAccepted.png" style="height: 32px;width: 32px;" ng-if="item.relation === 'friend'">
             </div>
           </div>
         </div>
@@ -271,11 +322,11 @@
         <ion-item>
           <div class="">Common Connections</div>
           <div class="row row-wrap">
-            <div class="col col-10" ng-repeat="item in connections">
+            <div class="col col-10" ng-repeat="item in profileData.mutualFriends">
               <div class="card card-hosts margin-0">
                 <div class="item item-borderless item-avatar-center-small">
-                  <img src="img/avatar.jpg" />
-                  <h2 ng-bind="item.friendName"></h2>
+                  <img src="{{'http://graph.facebook.com/' + item.fbId + '/picture?type=small'}}" />
+                  <h2 ng-bind="item.name"></h2>
                 </div>
               </div>
             </div>
@@ -367,7 +418,7 @@
 
 
 <script id="chatList.html" type="text/ng-template">
-  <ion-view view-title="Chat">
+  <ion-view view-title="">
     <ion-content class="padding">
       <div class="list">
         <a class="item item-avatar" ng-repeat="item in chatList" ng-click="joinChat(item.userId)">
@@ -387,8 +438,14 @@
 </script>
 
 <script id="feeds.html" type="text/ng-template">
-  <ion-view view-title="Feeds">
-
+  <ion-view view-title="">
+    <ion-content>
+      <div class="card">
+        <div class="item item-text-wrap">
+          This page is under construction
+        </div>
+      </div>
+    </ion-content>
   </ion-view>
 </script>
 
@@ -428,7 +485,7 @@
           </div>
         </div>-->
 
-        <div ng-if="user._id !== message._id">
+        <div ng-if="user._id !== message.userId">
 
           <img ng-click="viewProfile(message)" class="profile-pic left"
                ng-src="" onerror="onProfilePicError(this)" />
@@ -447,7 +504,7 @@
           </div>
         </div>
 
-        <div ng-if="user._id === message._id">
+        <div ng-if="user._id === message.userId">
 
           <img ng-click="viewProfile(message)" class="profile-pic right"
                ng-src="" onerror="onProfilePicError(this)" />

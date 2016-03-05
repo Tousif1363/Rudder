@@ -7,7 +7,8 @@ angular.module('services', [])
     var long, lat;
     var processing = false;
     var callback;
-    var minDistance = 2;
+    var minDistance = 200;
+    var newLat, newLong;
 
     // Credit: http://stackoverflow.com/a/27943/52160
     function getDistanceFromLatLonInKm(lat1,lon1,lat2,lon2) {
@@ -20,7 +21,7 @@ angular.module('services', [])
           Math.sin(dLon/2) * Math.sin(dLon/2)
         ;
       var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-      var d = R * c; // Distance in km
+      var d = R * c * 1000; // Distance in m
       return d;
     }
 
@@ -36,9 +37,11 @@ angular.module('services', [])
         processing = false;
         console.log(lat, long);
         console.log(position.coords.latitude, position.coords.longitude);
+        newLat = position.coords.latitude;
+        newLong = position.coords.longitude;
         var dist = getDistanceFromLatLonInKm(lat, long, position.coords.latitude, position.coords.longitude);
-        console.log("dist in km is "+dist);
-        if(dist <= minDistance) callback();
+        console.log("dist in m is "+dist);
+        if(dist >= minDistance) callback();
       });
     }
 
@@ -56,16 +59,22 @@ angular.module('services', [])
       setTarget: function(lg,lt) {
         long = lg;
         lat = lt;
+      },
+      getTarget: function(){
+        return {long: long, lat: lat};
+      },
+      getNewTarget: function(){
+        return {long: newLong, lat: newLat};
       }
     };
 
   })
 
-.factory('socket', function ($rootScope) {
-  var socket = io.connect('http://192.168.1.112:8080/');
+.factory('socket', function ($rootScope, SERVER_CONFIG) {
+  var socket = io.connect(SERVER_CONFIG.url);
 
   socket.on('connection', function (message) {
-    console.log('connnecte', message);
+    console.log('connnected', message);
   });
 
   return {
@@ -107,7 +116,7 @@ angular.module('services', [])
   })
 
   .service('LoginService', function ($http, $state, $q, $ionicLoading, TokenService, UserService,
-                                     EventsService, FriendsDataService, $cordovaGeolocation, socket) {
+                                     EventsService, FriendsDataService, ProfileService, $cordovaGeolocation, socket, SERVER_CONFIG) {
 
     //This is to notify the server about the user.
     var createFbUser = function () {
@@ -130,8 +139,10 @@ angular.module('services', [])
             }
           };
 
+          console.log('server path', SERVER_CONFIG.url+'/fb/login');
+
           //Post fb user data to server
-          $http.post('http://192.168.1.112:8080/fb/login', data)
+          $http.post(SERVER_CONFIG.url+'/fb/login', data)
             .success(function (data, status, headers, config) {
               var message = data;
               console.log('createfbuser sucess',data);
@@ -139,6 +150,8 @@ angular.module('services', [])
               TokenService.setUserToken({
                 ruderToken : data.ruderToken
               }).then(function(response){
+
+                console.log('value of token service promise', TokenService.getUserToken());
 
                 //getUserToken
                 TokenService.getUserToken().then(function(response){
@@ -161,7 +174,7 @@ angular.module('services', [])
                         }
                       });
                       console.log('Join emitted');
-
+                      $ionicLoading.hide();
                       $state.go('menu.tabs.discover');
                     });
 
@@ -177,6 +190,9 @@ angular.module('services', [])
                 });
               });
 
+              ProfileService.refreshProfileData().then(function(response){
+
+              });
 
             })
             .error(function (data, status, header, config) {
@@ -187,6 +203,9 @@ angular.module('services', [])
               console.log('createfbuser error',data);
 
               TokenService.setUserToken({}).then(function(response){
+                $ionicLoading.hide();
+
+                //TODO : Error state should take user back to login or discover
                 $state.go('menu.tabs.discover');
               });
             });
@@ -220,6 +239,9 @@ angular.module('services', [])
 
             //Notify the server about the user login
             createFbUser();
+
+            //ProfileService.setProfileData()
+
           }, function(response) {
             console.log('setUser : '+'failed');
           });
@@ -229,6 +251,7 @@ angular.module('services', [])
 
         }, function(fail){
           //fail get profile info
+          $ionicLoading.hide();
           console.log('profile info fail', fail);
         });
     };
@@ -239,7 +262,9 @@ angular.module('services', [])
       console.log('fbLoginError', error);
       console.log($state);
       $ionicLoading.hide();
-      $state.go('welcome');
+      if($state.current !== 'welcome'){
+        $state.go('welcome');
+      }
 
     };
 
@@ -331,13 +356,13 @@ angular.module('services', [])
           /*$ionicLoading.show({
             template: 'Logging in...'
           });*/
-          if($state.current === 'welcome'){
-            $state.go('welcome');
-          }
-          else{
+          $ionicLoading.show({
+            template: '<ion-spinner icon="lines" class="spinner-royal"></ion-spinner>'
+          });
+
             //ask the permissions you need. You can learn more about FB permissions here: https://developers.facebook.com/docs/facebook-login/permissions/v2.4
             facebookConnectPlugin.login(['email', 'public_profile','user_friends'], fbLoginSuccess, fbLoginError);
-          }
+
 
 
         }
@@ -352,6 +377,8 @@ angular.module('services', [])
       facebookSignIn : facebookSignIn
     }
   })
+
+
 
   .service('UserService', function($q) {
 
@@ -438,7 +465,139 @@ angular.module('services', [])
     };
   })
 
-  .service('EventsService', function($q, $http, $state, $ionicLoading, TokenService, UserService, EventGuestsDataService, $cordovaGeolocation) {
+  .service('ProfileService', function($q, $http , TokenService, SERVER_CONFIG) {
+
+    var setProfileData = function(profile_data) {
+      var deferred = $q.defer();
+
+      setTimeout(function() {
+        deferred.resolve(window.localStorage.rudder_profile_data = JSON.stringify(profile_data));
+      }, 0);
+
+      return deferred.promise;
+    };
+
+    var getProfileData = function(){
+      var deferred = $q.defer();
+
+      setTimeout(function() {
+        deferred.resolve(JSON.parse(window.localStorage.rudder_profile_data || '{}'));
+      }, 0);
+
+      return deferred.promise;
+    };
+
+    var updateProfileData = function(name, hyperPitch){
+      var deferred = $q.defer();
+
+      TokenService.getUserToken().then(function(response) {
+        var token = response;
+
+        var params = {
+          ruderToken: token.ruderToken,
+          name: name,
+          hyperPitch: hyperPitch
+        };
+
+        console.log('params to updateProfile', params);
+
+        $http.post(SERVER_CONFIG.url+'/updateprofile', params)
+          .success(function (data, status, headers, config) {
+            console.log('updateprofile success', data);
+
+            if(data.hasOwnProperty('success') && data.success === true) {
+              if(data.hasOwnProperty('user')){
+                setProfileData(data.user).then(function(response){
+                  deferred.resolve();
+                }, function(response){
+                  deferred.resolve();
+                });
+              }
+            }
+
+
+          })
+          .error(function (data, status, header, config) {
+            console.log('updateprofile  failure', data);
+            setTimeout(function() {
+              deferred.resolve();
+            }, 0);
+
+          });
+
+
+      }, function(response){
+          console.log('cannot get user token');
+
+
+          setTimeout(function() {
+              deferred.resolve();
+            }, 0);
+
+      });
+
+      return deferred.promise;
+
+    };
+
+    var refreshProfileData = function(){
+      var deferred = $q.defer();
+
+      TokenService.getUserToken().then(function(response) {
+        var token = response;
+
+        var params = {
+          ruderToken: token.ruderToken
+        };
+
+        console.log('params to refreshProfile', params);
+
+        $http.post(SERVER_CONFIG.url+'/refreshprofile', params)
+          .success(function (data, status, headers, config) {
+            console.log('refreshProfile success', data);
+
+            if(data.hasOwnProperty('success') && data.success === true) {
+              if(data.hasOwnProperty('user')){
+                setProfileData(data.user).then(function(response){
+                  deferred.resolve();
+                }, function(response){
+                  deferred.resolve();
+                });
+              }
+            }
+          })
+          .error(function (data, status, header, config) {
+            console.log('refreshProfile  failure', data);
+            setTimeout(function() {
+              deferred.resolve();
+            }, 0);
+
+          });
+
+
+      }, function(response){
+        console.log('cannot get user token');
+
+
+        setTimeout(function() {
+          deferred.resolve();
+        }, 0);
+
+      });
+
+      return deferred.promise;
+
+    };
+
+    return {
+      setProfileData: setProfileData,
+      getProfileData: getProfileData,
+      updateProfileData: updateProfileData,
+      refreshProfileData:refreshProfileData
+    };
+  })
+
+  .service('EventsService', function($q, $http, $state, $ionicLoading, TokenService, UserService, EventGuestsDataService, $cordovaGeolocation, SERVER_CONFIG) {
 
 //for the purpose of this example I will store user data on ionic local storage but you should save it on a database
     var setEventsData = function(events_data) {
@@ -502,7 +661,7 @@ angular.module('services', [])
 
           //After the lat and long is received from gps , request for the events data
           //getNearbyPlaces will return the list of events on passing the ruder token
-          $http.get('http://192.168.1.112:8080/placefinder/getnearbyplaces', {params : params})
+          $http.get('http://192.168.0.101:8080/placefinder/getnearbyplaces', {params : params})
             .success(function(data, status, headers, config) {
               console.log('nearby places data success', data);
               if(data.hasOwnProperty('success') && data.success === true){
@@ -564,7 +723,7 @@ angular.module('services', [])
         console.log('Data sent to checkin',data);
 
         //Notify the server for user check in
-        $http.post('http://192.168.1.112:8080/placefinder/checkin ', data)
+        $http.post(SERVER_CONFIG.url+'/placefinder/checkin ', data)
           .success(function(data, status, headers, config) {
             if(data.hasOwnProperty('success') && data.success === true){
 
@@ -592,12 +751,26 @@ angular.module('services', [])
 
               //Not blocking the user till the checkIn status of the user is updated.
               console.log('check in success', data);
-              if(data.hasOwnProperty('usersCheckedIn')){
+              if(data.hasOwnProperty('success') && data.success === true){
                 //Set the data in EventGuestsDataService
-                EventGuestsDataService.setEventGuestsData(data.usersCheckedIn);
+               /* if(data.hasOwnProperty('friends') && data.hasOwnProperty('receivedRequests') && data.hasOwnProperty('sentRequests') && data.hasOwnProperty('strangers'))
+                var guestsData = {friends : data.friends, receivedRequests: data.receivedRequests, sentRequests : data.sentRequests, strangers : data.strangers};
+                console.log(guestsData);*/
+                /*EventGuestsDataService.setEventGuestsData(guestsData).then(function(){
+                  //switch to event details screen , where checkedIn users list is displayed
+                  $state.go('menu.tabs.eventDetails');
 
-                //switch to event details screen , where checkedIn users list is displayed
-                $state.go('menu.tabs.eventDetails');
+
+
+
+                });*/
+                if(data.hasOwnProperty('usersCheckedIn')){
+                  EventGuestsDataService.setEventGuestsData(data.usersCheckedIn).then(function(){
+                    //switch to event details screen , where checkedIn users list is displayed
+                    $state.go('menu.tabs.eventDetails');
+                  });
+                }
+
               }
             }
 
@@ -641,7 +814,7 @@ angular.module('services', [])
         console.log('Data sent to checkout',data);
 
         //Notify the server for user check in
-        $http.post('http://192.168.1.112:8080/placefinder/checkout ', data)
+        $http.post(SERVER_CONFIG.url+'/placefinder/checkout ', data)
           .success(function(data, status, headers, config) {
             if(data.hasOwnProperty('success') && data.success === true){
               console.log('checkout success', data);
@@ -696,15 +869,27 @@ angular.module('services', [])
     };
   })
 
-  .service('EventGuestsDataService', function() {
+  .service('EventGuestsDataService', function($q, $http, SERVER_CONFIG, TokenService) {
 
 
     var setEventGuestsData = function(event_guests_data) {
-      window.localStorage.starter_event_guests_data = JSON.stringify(event_guests_data);
+      var deferred = $q.defer();
+
+      setTimeout(function() {
+        deferred.resolve(window.localStorage.starter_event_guests_data = JSON.stringify(event_guests_data));
+      }, 0);
+
+      return deferred.promise;
     };
 
     var getEventGuestsData = function(){
-      return JSON.parse(window.localStorage.starter_event_guests_data || '{}');
+      var deferred = $q.defer();
+
+      setTimeout(function() {
+        deferred.resolve(JSON.parse(window.localStorage.starter_event_guests_data || '{}'));
+      }, 0);
+
+      return deferred.promise;
     };
 
     var followUser = function (userId) {
@@ -738,7 +923,7 @@ angular.module('services', [])
         console.log('Data sent to follow',data);
 
         //Notify the server for user check in
-        $http.post('http://192.168.1.112:8080/follow', data)
+        $http.post(SERVER_CONFIG.url+'/follow', data)
           .success(function(data, status, headers, config) {
             if(data.hasOwnProperty('success') && data.success === true){
               console.log('check in success', data);
@@ -763,9 +948,59 @@ angular.module('services', [])
 
     };
 
+    var getProfile = function(userId){
+      var deferred = $q.defer();
+
+      TokenService.getUserToken().then(function(response) {
+        var token = response;
+
+        var params = {
+          ruderToken: token.ruderToken,
+          requestedUserId: userId
+        };
+
+        console.log('params to getProfile', params);
+
+        $http.post(SERVER_CONFIG.url+'/getprofile', params)
+          .success(function (data, status, headers, config) {
+            console.log('getprofile success', data);
+
+            setTimeout(function() {
+              deferred.resolve(data);
+            }, 0);
+            /*if(data.hasOwnProperty('success') && data.success === true) {
+
+            }*/
+
+
+          })
+          .error(function (data, status, header, config) {
+            console.log('getprofile  failure', data);
+            setTimeout(function() {
+              deferred.resolve();
+            }, 0);
+
+          });
+
+
+      }, function(response){
+        console.log('cannot get user token');
+
+
+        setTimeout(function() {
+          deferred.resolve();
+        }, 0);
+
+      });
+
+      return deferred.promise;
+
+    };
+
     return {
       setEventGuestsData : setEventGuestsData,
-      getEventGuestsData : getEventGuestsData
+      getEventGuestsData : getEventGuestsData,
+      getProfile : getProfile
     };
   })
 
@@ -785,7 +1020,7 @@ angular.module('services', [])
     };
   })
 
-  .service('ChatListDataService', function($q , $http, $ionicLoading, TokenService) {
+  .service('ChatListDataService', function($q , $http, $ionicLoading, TokenService, SERVER_CONFIG) {
 
     var setChatListData = function(chat_list_data) {
       var deferred = $q.defer();
@@ -819,9 +1054,11 @@ angular.module('services', [])
         console.log('chatListDataHelper params', params);
 
         console.log(params);
-        $ionicLoading.show();
+        $ionicLoading.show({
+          template: '<ion-spinner icon="lines" class="spinner-royal"></ion-spinner>'
+        });
 
-        $http.post('http://192.168.1.112:8080/friendlist', {ruderToken : token.ruderToken})
+        $http.post(SERVER_CONFIG.url+'/friendlist', {ruderToken : token.ruderToken})
           .success(function(data, status, headers, config) {
             console.log('friendlist data success', data);
             friendsData = data;
