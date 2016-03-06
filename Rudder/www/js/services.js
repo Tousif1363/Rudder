@@ -150,15 +150,11 @@ angular.module('services', [])
               TokenService.setUserToken({
                 ruderToken : data.ruderToken
               }).then(function(response){
-
-                console.log('value of token service promise', TokenService.getUserToken());
-
                 //getUserToken
                 TokenService.getUserToken().then(function(response){
                   token = response;
                   console.log('token value at fb login :', token);
 
-                  //console.log('rudderData', data);
                   UserService.setRudderData(data).then(function(){
                     var rudderData = {};
                     UserService.getRudderData().then(function(response) {
@@ -175,15 +171,16 @@ angular.module('services', [])
                       });
                       console.log('Join emitted');
                       $ionicLoading.hide();
+
                       $state.go('menu.tabs.discover');
                     });
 
 
 
-                    if(data.hasOwnProperty('friends')){
+                    /*if(data.hasOwnProperty('friends')){
                       friends = data.friends;
                       FriendsDataService.setFriendsData(friends);
-                    }
+                    }*/
                   });
 
 
@@ -622,72 +619,36 @@ angular.module('services', [])
 
     //Get nearby places data and show event discovery screen
 
-    var getNearbyPlaces = function(){
+    var getNearbyPlaces = function(params){
+      var deferred = $q.defer();
 
+      //After the lat and long is received from gps , request for the events data
+      //getNearbyPlaces will return the list of events on passing the ruder token
+      $http.get(SERVER_CONFIG.url+'/placefinder/getnearbyplaces', {params: params})
+        .success(function (data, status, headers, config) {
+          console.log('nearby places data success', data);
+          if (data.hasOwnProperty('success') && data.success === true) {
+            //console.log('Succeess nearby places data');
+            if (data.hasOwnProperty('places')) {
+              setEventsData(data.places).then(function (response) {
+                  setTimeout(function() {
+                    deferred.resolve();
+                  }, 0);
+                },
+                function (response) {
+                  setTimeout(function() {
+                    deferred.resolve();
+                  }, 0);
+                });
+            }
+          }
 
-      $ionicLoading.show({
-        template: '<ion-spinner icon="lines" class="spinner-royal"></ion-spinner>'
-      });
+        })
+        .error(function (data, status, header, config) {
+          console.log('nearby places data failure', data);
+        });
 
-      console.log('Started Loading Events');
-
-      var posOptions = {
-        enableHighAccuracy: true,
-        timeout: 20000,
-        maximumAge: 0
-      };
-
-      var config = {
-        headers : {
-          'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8;'
-        }
-      } ;
-
-      var token = {};
-      TokenService.getUserToken().then(function(response){
-        token = response;
-        console.log('token value at get Nearby places :', token);
-      });
-
-       /* $cordovaGeolocation.getCurrentPosition(posOptions).then(function (position) {
-          var lat  = position.coords.latitude;
-          var long = position.coords.longitude;
-          var params = {ruderToken: token.ruderToken ,lat : lat, long: long};
-          console.log(token.ruderToken);
-          console.log(lat);
-          console.log(long);
-          console.log(params);
-
-
-          //After the lat and long is received from gps , request for the events data
-          //getNearbyPlaces will return the list of events on passing the ruder token
-          $http.get('http://192.168.0.101:8080/placefinder/getnearbyplaces', {params : params})
-            .success(function(data, status, headers, config) {
-              console.log('nearby places data success', data);
-              if(data.hasOwnProperty('success') && data.success === true){
-                //console.log('Succeess nearby places data');
-                if(data.hasOwnProperty('places')){
-                  setEventsData(data.places);
-                }
-              }
-
-              $ionicLoading.hide();
-
-            })
-            .error(function (data, status, header, config){
-              console.log('nearby places data failure', data);
-              $state.go('menu.tabs.discover');
-              setEventsData({});
-
-              $ionicLoading.hide();
-
-            });
-
-        }, function(err) {
-          $ionicLoading.hide();
-          console.log(err);
-        });*/
-
+      return deferred.promise;
     };
 
     var checkInEvent = function(placeId, placeName){
@@ -892,6 +853,37 @@ angular.module('services', [])
       return deferred.promise;
     };
 
+    var acceptRequest = function(){
+      var deferred = $q.defer();
+      var token = {};
+      TokenService.getUserToken().then(function(response){
+        token = response;
+
+        if(!jQuery.isEmptyObject(token)) {
+          var data = {ruderToken: token.ruderToken, senderUserId: senderUserId};
+          //Notify the server to add user
+          $http.post(SERVER_CONFIG.url+'/acceptrequest ', data)
+            .success(function (data, status, headers, config) {
+              console.log('acceptRequest success', data);
+
+              setTimeout(function() {
+                deferred.resolve(data);
+              }, 0);
+
+            })
+            .error(function (data, status, header, config) {
+              console.log('acceptRequest failure', data);
+
+              setTimeout(function() {
+                deferred.resolve(data);
+              }, 0);
+            });
+        }
+      });
+
+      return deferred.promise;
+    };
+
     var followUser = function (userId) {
       console.log('Follow user ');
       console.log('User id is :', userId);
@@ -1000,7 +992,8 @@ angular.module('services', [])
     return {
       setEventGuestsData : setEventGuestsData,
       getEventGuestsData : getEventGuestsData,
-      getProfile : getProfile
+      getProfile : getProfile,
+      acceptRequest : acceptRequest
     };
   })
 
@@ -1043,6 +1036,8 @@ angular.module('services', [])
     };
 
     var chatListDataHelper = function(){
+      var deferred = $q.defer();
+
       var token = {};
       var friendsData = {};
       TokenService.getUserToken().then(function(response){
@@ -1054,27 +1049,29 @@ angular.module('services', [])
         console.log('chatListDataHelper params', params);
 
         console.log(params);
-        $ionicLoading.show({
-          template: '<ion-spinner icon="lines" class="spinner-royal"></ion-spinner>'
-        });
 
         $http.post(SERVER_CONFIG.url+'/friendlist', {ruderToken : token.ruderToken})
           .success(function(data, status, headers, config) {
             console.log('friendlist data success', data);
-            friendsData = data;
+          if(data.hasOwnProperty('friends')){
+            setTimeout(function() {
+              deferred.resolve(setChatListData(data.friends));
+            }, 0);
+          }
 
-            $ionicLoading.hide();
 
           })
           .error(function (data, status, header, config){
             console.log('friendlist data failure', data);
 
+            setTimeout(function() {
+              deferred.resolve();
+            }, 0);
 
-            $ionicLoading.hide();
           });
       });
 
-
+      return deferred.promise;
     };
 
     var fetchChatListData = function(){

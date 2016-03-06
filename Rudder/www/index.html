@@ -65,7 +65,7 @@
 
     <ion-side-menu side="left">
       <ion-content class="background-color-ruder">
-        <div class="card card-profile">
+        <div class="card card-profile" ng-click="showProfile()" menu-close>
           <div class="item item-avatar-center-big">
             <img ng-src="{{'http://graph.facebook.com/' + user.userID + '/picture?type=large'}}">
             <h2 ng-bind="user.name"></h2>
@@ -75,6 +75,7 @@
         <ul class="list list-settings padding">
           <a href ="#/menu/tabs/discover" class="item item-icon-left" menu-close><i class="icon ion-location"></i>Tag place</a>
           <a href ="#/menu/home" class="item item-icon-left" menu-close><i class="icon ion-settings"></i>App Setting</a>
+          <a href="#" class="item item-icon-left" menu-close ng-click="rateUs()"><i class="icon ion-android-star"></i>Rate this app</a>
         </ul>
       </ion-content>
     </ion-side-menu>

@@ -48,7 +48,7 @@ angular.module('controllers', [])
 
 
 
-  .controller('AppCtrl', function($scope, $rootScope, UserService, EventGuestsDataService , ChatListDataService){
+  .controller('AppCtrl', function($scope, $state, $rootScope, $ionicPlatform, UserService){
     console.log('Set user data here');
 
     ionic.Platform.ready(function() {
@@ -68,6 +68,21 @@ angular.module('controllers', [])
 
 
     });
+
+    $scope.rateUs = function () {
+      console.log('Rate us!!!');
+      if ($ionicPlatform.is('android')) {
+        window.open('market://details?id=com.flipkart.android');
+      }
+      else if ($ionicPlatform.is('ios')) {
+        window.open('itms-apps://itunes.apple.com/us/app/domainsicle-domain-name-search/id511364723?ls=1&mt=8'); // or itms://
+      }
+    };
+
+    $scope.showProfile = function () {
+      console.log('Show profile');
+      $state.go('menu.home');
+    };
   })
 
   .controller('HomeCtrl', function($scope, $http, UserService, $ionicActionSheet, $state, $ionicLoading, ProfileService, TokenService, SERVER_CONFIG){
@@ -137,7 +152,7 @@ angular.module('controllers', [])
     };
   })
 
-  .controller('NotificationCtrl', function($scope ,TokenService, SERVER_CONFIG){
+  .controller('NotificationCtrl', function($scope ,$ionicLoading, EventGuestsDataService){
 
     $scope.acceptRequest = function(senderUserId){
 
@@ -145,27 +160,10 @@ angular.module('controllers', [])
       $ionicLoading.show({
         template: '<ion-spinner icon="lines" class="spinner-royal"></ion-spinner>'
       });
-
-      var token = {};
-      TokenService.getUserToken().then(function(response){
-        token = response;
-
-        if(!jQuery.isEmptyObject(token)) {
-          var data = {ruderToken: token.ruderToken, senderUserId: senderUserId};
-          //Notify the server to add user
-          $http.post(SERVER_CONFIG.url+'/acceptrequest ', data)
-            .success(function (data, status, headers, config) {
-              console.log('acceptRequest success', data);
-
-
-              $ionicLoading.hide();
-            })
-            .error(function (data, status, header, config) {
-              console.log('acceptRequest failure', data);
-              $ionicLoading.hide();
-            });
-        }
+      EventGuestsDataService.acceptRequest().then(function(response){
+        $ionicLoading.hide();
       });
+
     };
   })
 
@@ -175,6 +173,7 @@ angular.module('controllers', [])
     //Initially user location needs to be computed
     $scope.targetUpdated = false;
     $scope.targetSet = false;
+    $scope.items = {};
 
     //Ensures data is loaded every time the screen is opened.
     $rootScope.$on('$stateChangeStart', function (event, toState, toParams, fromState, fromParams) {
@@ -216,37 +215,6 @@ angular.module('controllers', [])
 
       var token = {};
 
-      var getPlacesData = function (params) {
-        //After the lat and long is received from gps , request for the events data
-        //getNearbyPlaces will return the list of events on passing the ruder token
-        $http.get(SERVER_CONFIG.url+'/placefinder/getnearbyplaces', {params: params})
-          .success(function (data, status, headers, config) {
-            console.log('nearby places data success', data);
-            if (data.hasOwnProperty('success') && data.success === true) {
-              //console.log('Succeess nearby places data');
-              if (data.hasOwnProperty('places')) {
-                EventsService.setEventsData(data.places).then(function (response) {
-                    $scope.items = data.places;
-                  },
-                  function (response) {
-
-                  });
-              }
-            }
-
-            $ionicLoading.hide();
-
-          })
-          .error(function (data, status, header, config) {
-            console.log('nearby places data failure', data);
-            $state.go('menu.tabs.discover');
-            EventsService.setEventsData({});
-
-            $ionicLoading.hide();
-
-          });
-      };
-
       TokenService.getUserToken().then(function(response){
         token = response;
 
@@ -261,7 +229,12 @@ angular.module('controllers', [])
               var pos = GeoAlert.getTarget();
               var params = {ruderToken: token.ruderToken, lat: pos.lat , long: pos.long};
 
-              getPlacesData(params);
+              EventsService.getNearbyPlaces(params).then(function(response){
+                EventsService.getEventsData().then(function(response){
+                  $scope.items = response;
+                  $ionicLoading.hide();
+                });
+              });
 
             }
             else {
@@ -286,7 +259,13 @@ angular.module('controllers', [])
                 $scope.targetUpdated = true;
               });
 
-              getPlacesData(params);
+              EventsService.getNearbyPlaces(params).then(function(response){
+                EventsService.getEventsData().then(function(response){
+                  $scope.items = response;
+                  $ionicLoading.hide();
+                });
+              });
+
 
             }, function (err) {
               $ionicLoading.hide();
@@ -688,43 +667,25 @@ angular.module('controllers', [])
     });
   })
 
-  .controller('ChatListDataCtrl', function($scope, $state, $http ,$ionicLoading, TokenService, SERVER_CONFIG ){
+  .controller('ChatListDataCtrl', function($scope, $state, $ionicLoading, ChatListDataService ){
     $scope.chatList = {};
     console.log('Chat List');
 
     $scope.$on('$ionicView.enter', function() {
       console.log('ChatListDataCtrl $ionicView.enter');
 
+      $ionicLoading.show({
+        template: '<ion-spinner icon="lines" class="spinner-royal"></ion-spinner>'
+      });
+      ChatListDataService.fetchChatListData().then(function(){
+        ChatListDataService.getChatListData().then(function(response){
+          $scope.chatList = response;
+          $ionicLoading.hide();
+        },function(response){
+          $ionicLoading.hide();
+        })
+      });
 
-        var token = {};
-        TokenService.getUserToken().then(function(response) {
-          token = response;
-
-          console.log('chatListDataHelper token', token);
-
-          var params = {ruderToken: token.ruderToken};
-          console.log('chatListDataHelper params', params);
-
-          console.log(params);
-          $ionicLoading.show({
-            template: '<ion-spinner icon="lines" class="spinner-royal"></ion-spinner>'
-          });
-
-          $http.post(SERVER_CONFIG.url+'/friendlist', {ruderToken: token.ruderToken})
-            .success(function (data, status, headers, config) {
-              console.log('friendlist data success', data);
-              $scope.chatList = data.friends;
-
-              $ionicLoading.hide();
-
-            })
-            .error(function (data, status, header, config) {
-              console.log('friendlist data failure', data);
-
-
-              $ionicLoading.hide();
-            });
-        });
 
     });
 
