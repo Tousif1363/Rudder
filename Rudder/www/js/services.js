@@ -77,6 +77,10 @@ angular.module('services', [])
     console.log('connnected', message);
   });
 
+  socket.on('update checkin', function(message){
+    console.log('update checkin' ,message);
+  });
+
   return {
     on: function (eventName, callback) {
       socket.on(eventName, function () {
@@ -177,10 +181,10 @@ angular.module('services', [])
 
 
 
-                    /*if(data.hasOwnProperty('friends')){
+                    if(data.hasOwnProperty('friends')){
                       friends = data.friends;
                       FriendsDataService.setFriendsData(friends);
-                    }*/
+                    }
                   });
 
 
@@ -594,7 +598,7 @@ angular.module('services', [])
     };
   })
 
-  .service('EventsService', function($q, $http, $state, $ionicLoading, TokenService, UserService, EventGuestsDataService, $cordovaGeolocation, SERVER_CONFIG) {
+  .service('EventsService', function($q, $http, $state, $ionicLoading, TokenService, UserService, EventGuestsDataService, $cordovaGeolocation, SERVER_CONFIG, socket) {
 
 //for the purpose of this example I will store user data on ionic local storage but you should save it on a database
     var setEventsData = function(events_data) {
@@ -651,7 +655,7 @@ angular.module('services', [])
       return deferred.promise;
     };
 
-    var checkInEvent = function(placeId, placeName){
+    var checkInEvent = function(placeId){
 
       console.log('Attempting check in ');
       console.log('Place id is :', placeId);
@@ -688,11 +692,28 @@ angular.module('services', [])
           .success(function(data, status, headers, config) {
             if(data.hasOwnProperty('success') && data.success === true){
 
-              localStorage.setItem("placeName", JSON.stringify({placeName: placeName}));
               //Update the checkInStatus of the user
               var rudderData = {};
               UserService.getRudderData().then(function(response) {
                 rudderData = response;
+
+
+                var checkInData = {
+                  placeId : placeId,
+                  userId: rudderData.userId
+                };
+
+                console.log('user checkin emitted to server', checkInData);
+
+                //notify the server about user check in
+                socket.emit('checkin', checkInData , function (result) {
+                  console.log('user checkin emitted!');
+                  if (!result) {
+                    console.log('user checkin notified!');
+                  } else {
+                    console.log("user checkin failed");
+                  }
+                });
 
                 if(rudderData.hasOwnProperty('checkIn') && rudderData.checkIn.hasOwnProperty('status') && rudderData.checkIn.hasOwnProperty('whereId'))
                 {
@@ -714,23 +735,15 @@ angular.module('services', [])
               console.log('check in success', data);
               if(data.hasOwnProperty('success') && data.success === true){
                 //Set the data in EventGuestsDataService
-               /* if(data.hasOwnProperty('friends') && data.hasOwnProperty('receivedRequests') && data.hasOwnProperty('sentRequests') && data.hasOwnProperty('strangers'))
-                var guestsData = {friends : data.friends, receivedRequests: data.receivedRequests, sentRequests : data.sentRequests, strangers : data.strangers};
-                console.log(guestsData);*/
-                /*EventGuestsDataService.setEventGuestsData(guestsData).then(function(){
-                  //switch to event details screen , where checkedIn users list is displayed
-                  $state.go('menu.tabs.eventDetails');
 
-
-
-
-                });*/
                 if(data.hasOwnProperty('usersCheckedIn')){
                   EventGuestsDataService.setEventGuestsData(data.usersCheckedIn).then(function(){
                     //switch to event details screen , where checkedIn users list is displayed
                     $state.go('menu.tabs.eventDetails');
                   });
                 }
+
+
 
               }
             }
@@ -747,8 +760,9 @@ angular.module('services', [])
       });
     };
 
-    var checkOutEvent = function(){
+    var checkOutEvent = function(placeId){
 
+      var placeId = placeId;
       console.log('Attempting check out ');
 
       //Show the loader till the check is complete or fails
@@ -784,6 +798,24 @@ angular.module('services', [])
               var rudderData = {};
               UserService.getRudderData().then(function(response) {
                 rudderData = response;
+
+
+                var checkOutData = {
+                  placeId : placeId,
+                  userId: rudderData.userId
+                };
+
+                console.log('user checkOutData emitted to server', checkOutData);
+
+                //notify the server about user check in
+                socket.emit('checkout', checkOutData , function (result) {
+                  console.log('user checkout emitted!');
+                  if (!result) {
+                    console.log('user checkout notified!');
+                  } else {
+                    console.log("user checkout failed");
+                  }
+                });
 
                 if(rudderData.hasOwnProperty('checkIn') && rudderData.checkIn.hasOwnProperty('status') && rudderData.checkIn.hasOwnProperty('whereId'))
                 {

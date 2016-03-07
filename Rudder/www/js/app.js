@@ -5,8 +5,9 @@
 // the 2nd parameter is an array of 'requires'
 angular.module('starter', ['ionic', 'controllers', 'services','monospaced.elastic', 'angularMoment', 'ngCordova', 'btford.socket-io'])
 
+  //http://188.166.244.93
   .constant("SERVER_CONFIG", {
-    "url": "http://188.166.244.93",
+    "url": "http://192.168.0.113:8080",
     "port": ""
   })
 
@@ -44,30 +45,8 @@ angular.module('starter', ['ionic', 'controllers', 'services','monospaced.elasti
         console.log('now offline');
       });
 
-      /*var posOptions = {
-        enableHighAccuracy: true,
-        timeout: 20000,
-        maximumAge: 0
-      };
-
-      $rootScope.targetUpdated = false;
-
-      $cordovaGeolocation.getCurrentPosition(posOptions).then(function (position) {
-        var lat  = position.coords.latitude;
-        var long = position.coords.longitude;
-        console.log('Lat onStart',lat);
-        console.log('Long onStart', long);
-
-        GeoAlert.begin(lat,long, function() {
-          console.log('TARGET');
-          $rootScope.targetUpdated = true;
-        });
 
 
-
-
-
-      });*/
 
     });
 
@@ -79,6 +58,8 @@ angular.module('starter', ['ionic', 'controllers', 'services','monospaced.elasti
       $state.go('welcome');
     }
     //$state.go('menu.tabs.discover');
+
+
 
   })
 

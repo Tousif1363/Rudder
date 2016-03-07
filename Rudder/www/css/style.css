@@ -220,8 +220,13 @@ a.autolinker {
 
 /* Class Groups */
 .card-guests-detail {
-  border-radius: 6px;
+  float: left;
+  width: 100%;
+  height: 220px;
   box-shadow: 0px 0px 0px rgba(0,0,0,0);
+}
+.card-guests-detail .item {
+  height: 100%;
 }
 
 .card-guests-detail h2 {
@@ -242,6 +247,10 @@ a.autolinker {
   font-weight: 300;
   border-top: 1px solid #F3F3F3;
   background-color: #FAFAFA;
+}
+
+.card-guests-detail .item {
+  padding: 0;
 }
 
 .card-guests {
@@ -395,22 +404,47 @@ a.autolinker {
 .custom-placeholder{
   background: #FFFFFF;
   z-index: -1;
-  margin: -50px -20px -20px -20px;
-  padding-bottom: 20px;
+  width: 100%;
+  height: 100px;
+  position: relative;
 }
-
-
-
-.modal{
-  display: block !important;
+.header-person-add {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  top: 0;
+  left: calc(100% - 50px);
 }
-
 .modal-dialog{
-  overflow-y: initial !important
+  overflow-y: hidden !important;
 }
 .modal-body{
-  height: auto;
-  overflow-y: scroll;
+  height: calc(100% - 218px);
+  float: left;
+  width: 100%;
+  margin-top: -2px;
+  overflow-y: hidden;
+}
+
+.item-avatar-container {
+  position: absolute;
+  max-width: 120px;
+  max-height: 120px;
+  margin-top: 60px;
+  margin-left: calc(50% - 60px);
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  display: block;
+  padding: 20px;
+  background: #ffffff;
+  border: 1px solid;
+}
+
+.item-avatar-container img {
+  height: 80px;
+  width: 80px;
+  border-radius: 50%;
 }
 
 .icon-friend-request{

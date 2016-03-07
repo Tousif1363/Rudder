@@ -330,7 +330,7 @@ angular.module('controllers', [])
         if(res){
           //$state.go('menu.tabs.eventDetails');
           //console.log($scope.items[index].id);
-          EventsService.checkInEvent($scope.items[index].id, $scope.items[index].name);
+          EventsService.checkInEvent($scope.items[index].id);
 
           console.log('You wish to join the event :)');
         }
@@ -341,7 +341,7 @@ angular.module('controllers', [])
     };
   })
 
-  .controller('EventDataCtrl', function($scope, $ionicModal, $ionicLoading, $ionicPopover, $q, $http,  EventGuestsDataService, EventsService, UserService, TokenService, SERVER_CONFIG){
+  .controller('EventDataCtrl', function($scope, $ionicModal, $ionicLoading, $ionicPopover, $q, $http,  EventGuestsDataService, EventsService, UserService, TokenService, SERVER_CONFIG, socket){
     //$scope.lists = EventGuestsDataService.getEventGuestsData();
     /*$scope.data = [{guestName : 'Hemant', guestTitle : 'UX/UI designer at Stayglad'},{guestName : 'Tousif',guestTitle : 'HMI developer at Harman'},
       {guestName : 'Ved', guestTitle : 'Big data expert at Oracle'},{guestName : 'Raj', guestTitle : 'Market research Analyst at SBD'},
@@ -363,6 +363,8 @@ angular.module('controllers', [])
     $scope.currentUserFollowStatus = false;
 
     $scope.rudderData = {};
+    $scope.data = {};
+
     UserService.getRudderData().then(function(response){
         $scope.rudderData = response;
       },
@@ -370,24 +372,87 @@ angular.module('controllers', [])
         //Failed fetching getRudderData()
       });
 
+    var fetchGuestsData = function(){
+      EventGuestsDataService.getEventGuestsData().then(function(response){
+        console.log('users data', response);
+        var guestList = [];
+        for(var i = 0; i < response.length; i++){
+          if(response[i].relation !== 'own')
+          {
+            guestList.push(response[i]);
+          }
+        }
+        $scope.data = guestList;
+        $scope.lists = listToMatrix($scope.data, $scope.numCols);
+      });
+    };
+
+    //update the view with the latest data.
+    fetchGuestsData();
+
     $scope.placeName = JSON.parse(localStorage.getItem("placeName"));
 
+    socket.on('update checkin', function(message){
+      console.log('update checkin' ,message);
 
+      EventGuestsDataService.getEventGuestsData().then(function(response){
+        console.log('users data', response);
+        var found = false;
 
-
-    $scope.data = {};
-    EventGuestsDataService.getEventGuestsData().then(function(response){
-      console.log('users data', response);
-      var guestList = [];
-      for(var i = 0; i < response.length; i++){
-        if(response[i].relation !== 'own')
-        {
-          guestList.push(response[i]);
+        for(var i = 0; i < response.length; i++){
+          if(response[i].userId === message.userId)
+          {
+            found = true;
+          }
         }
-      }
-      $scope.data = guestList;
-      $scope.lists = listToMatrix($scope.data, $scope.numCols);
+
+        if(!found){
+          response.push(message);
+        }
+
+        console.log('response after pushing data', response);
+
+        EventGuestsDataService.setEventGuestsData(response).then(function(){
+          fetchGuestsData();
+        });
+
+
+      });
+
     });
+
+    socket.on('update checkout', function(message){
+      console.log('update checkout' ,message);
+
+      EventGuestsDataService.getEventGuestsData().then(function(response){
+        console.log('users data', response);
+        var found = false;
+        var index = -1;
+
+        for(var i = 0; i < response.length; i++){
+          if(response[i].userId === message.userId)
+          {
+            found = true;
+            index = i;
+          }
+        }
+        console.log('found status', found);
+        console.log('index value', index);
+        if(found && index !== -1){
+          response.splice(index,1);
+        }
+
+        console.log('response after removing data', response);
+
+        EventGuestsDataService.setEventGuestsData(response).then(function(){
+          fetchGuestsData();
+        });
+
+
+      });
+    });
+
+
 
     function modifyRelationOnRequestSent(userId){
       console.log($scope.lists);
@@ -534,7 +599,24 @@ angular.module('controllers', [])
 
     $scope.checkout = function(){
       $scope.closePopover();
-      EventsService.checkOutEvent();
+
+      UserService.getRudderData().then(function(response) {
+        rudderData = response;
+        console.log('rudderData at check out', rudderData);
+        if(rudderData.hasOwnProperty('checkIn') && rudderData.checkIn.hasOwnProperty('status'))
+        {
+          if(rudderData.checkIn.status === true) {
+            console.log('checkout place id', rudderData.checkIn.whereId);
+            EventsService.checkOutEvent(rudderData.checkIn.whereId);
+          }
+        }
+      }, function(response) {
+
+      });
+
+
+
+
     };
 
     $scope.onSwipeRight = function() {
@@ -714,13 +796,26 @@ angular.module('controllers', [])
     };
   })
 
-  .controller('TabCtrl', function($scope, $state){
+  .controller('TabCtrl', function($scope, $state, $ionicLoading, ProfileService){
+    $scope.notificationsAvailable = false;
+
 
     $scope.showNotifications = function(){
       console.log('show notifications');
 
       $state.go('menu.notifications');
-    }
+    };
+
+    $scope.refreshProfile = function(){
+      $ionicLoading.show({
+        template: '<ion-spinner icon="lines" class="spinner-royal"></ion-spinner>'
+      });
+      ProfileService.refreshProfileData().then(function(response){
+        $ionicLoading.hide();
+      });
+    };
+
+
 
   })
 

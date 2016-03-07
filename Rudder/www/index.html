@@ -41,7 +41,7 @@
 
   <!--<script src='lib/facebook-connect-plugin/index.js'></script>-->
 
-  <script src="http://188.166.244.93/socket.io/socket.io.js"></script>
+  <script src="http://192.168.0.113:8080/socket.io/socket.io.js"></script>
 
   <!-- Other Libraries-->
   <script src="lib/angular-sanitize/angular-sanitize.min.js"></script>
@@ -106,7 +106,9 @@
     </ion-nav-buttons>
 
     <ion-nav-buttons side="right">
-      <button class="button button-icon button-clear ion-android-notifications-none" ng-click="showNotifications()"></button>
+      <button class="button button-icon button-clear ion-android-refresh" ng-click="refreshProfile()"></button>
+      <button ng-if="notificationsAvailable === false" class="button button-icon button-clear ion-android-notifications-none" ng-click="showNotifications()"></button>
+      <button ng-if="notificationsAvailable === true" class="button button-icon button-clear ion-android-notifications" ng-click="showNotifications()"></button>
     </ion-nav-buttons>
   </ion-nav-bar>
 
@@ -267,29 +269,28 @@
 <script id="modal.html" type="text/ng-template">
   <ion-modal-view class="transparent modal modal-dialog">
     <div class="card card-guests-detail margin-0 transparent" on-swipe-left="onSwipeLeft()" on-swipe-right="onSwipeRight()">
-      <div class="item item-avatar-center-big transparent">
-        <img ng-src="{{'http://graph.facebook.com/' + item.fbId + '/picture?type=large'}}">
+      <div class="item transparent">
+        <div class="item-avatar-center-big" style="min-height: 120px!important;">
+          <div class="item-avatar-container">
+            <img ng-src="{{'http://graph.facebook.com/' + item.fbId + '/picture?type=large'}}">
+          </div>
+        </div>
         <div class="custom-placeholder">
           <br><br><br>
           <h2>{{item.name}}</h2>
           <p>{{profileData.hyperPitch}}</p>
-          <div class="row" style="margin: -30px 0px -20px 0px;">
-            <div class = "col-20 col-offset-80">
-              <img src="img/requestAdd.png" style="height: 32px;width: 32px;" ng-if="item.relation === 'stranger'" ng-click="addFriend(item.userId)">
-              <img src="img/requestSent.png" style="height: 32px;width: 32px;" ng-if="item.relation === 'sentRequest'">
-              <img src="img/requestSent.png" style="height: 32px;width: 32px;" ng-if="item.relation === 'receivedRequest'">
+              <img src="img/requestAdd.png" class="header-person-add" style="height: 32px;width: 32px; " ng-if="item.relation === 'stranger'" ng-click="addFriend(item.userId)">
+              <img src="img/requestSent.png" class="header-person-add" style="height: 32px;width: 32px;" ng-if="item.relation === 'sentRequest'">
+              <img src="img/requestSent.png" class="header-person-add" style="height: 32px;width: 32px;" ng-if="item.relation === 'receivedRequest'">
 
-              <img src="img/requestAccepted.png" style="height: 32px;width: 32px;" ng-if="item.relation === 'friend'">
-            </div>
-          </div>
+              <img src="img/requestAccepted.png" class="header-person-add" style="height: 32px;width: 32px;" ng-if="item.relation === 'friend'">
         </div>
-
         <div class="clearfix"></div>
       </div>
     </div>
     <div class="modal-body">
       <ion-list on-swipe-left="onSwipeLeft()" on-swipe-right="onSwipeRight()">
-        <!--<ion-item class="item item-body">
+        <ion-item class="item item-body">
           <div class="row">
             <a class="tab-item">
               <i class="icon ion-social-linkedin icon-change"></i>
@@ -319,7 +320,7 @@
             </button>
           </div>
 
-        </ion-item>-->
+        </ion-item>
         <ion-item>
           <div class="">Common Connections</div>
           <div class="row row-wrap">
