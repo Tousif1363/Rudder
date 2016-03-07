@@ -152,15 +152,20 @@ angular.module('controllers', [])
     };
   })
 
-  .controller('NotificationCtrl', function($scope ,$ionicLoading, EventGuestsDataService){
+  .controller('NotificationCtrl', function($scope ,$ionicLoading, EventGuestsDataService, ProfileService){
+
+    $scope.receivedRequests = {};
+
+    ProfileService.getProfileData().then(function(response){
+      $scope.receivedRequests = response.receivedRequests;
+    });
 
     $scope.acceptRequest = function(senderUserId){
 
-      console.log(userId);
       $ionicLoading.show({
         template: '<ion-spinner icon="lines" class="spinner-royal"></ion-spinner>'
       });
-      EventGuestsDataService.acceptRequest().then(function(response){
+      EventGuestsDataService.acceptRequest(senderUserId).then(function(response){
         $ionicLoading.hide();
       });
 
@@ -798,6 +803,9 @@ angular.module('controllers', [])
 
   .controller('TabCtrl', function($scope, $state, $ionicLoading, ProfileService){
     $scope.notificationsAvailable = false;
+    $scope.profileData = {};
+    $scope.notifications = {};
+    $scope.receivedRequests = {};
 
 
     $scope.showNotifications = function(){
@@ -811,6 +819,15 @@ angular.module('controllers', [])
         template: '<ion-spinner icon="lines" class="spinner-royal"></ion-spinner>'
       });
       ProfileService.refreshProfileData().then(function(response){
+
+        ProfileService.getProfileData().then(function(response){
+          $scope.receivedRequests = response.receivedRequests;
+
+          if($scope.receivedRequests.length > 0){
+            $scope.notificationsAvailable = true;
+          }
+        });
+
         $ionicLoading.hide();
       });
     };

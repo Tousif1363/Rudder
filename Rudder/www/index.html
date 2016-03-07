@@ -41,7 +41,7 @@
 
   <!--<script src='lib/facebook-connect-plugin/index.js'></script>-->
 
-  <script src="http://192.168.0.113:8080/socket.io/socket.io.js"></script>
+  <script src="http://192.168.0.116:8080/socket.io/socket.io.js"></script>
 
   <!-- Other Libraries-->
   <script src="lib/angular-sanitize/angular-sanitize.min.js"></script>
@@ -184,9 +184,9 @@
     <ion-content class="">
       <div class="list">
 
-        <div class="item item-button-right">
-          Dummy notiifcation
-          <button class="button button-positive" ng-click="">
+        <div class="item item-button-right" ng-repeat="item in receivedRequests">
+          {{item.name + " has sent you a friend request"}}
+          <button class="button button-positive" ng-click="acceptRequest(item.userId)">
             <i class="icon ion-android-done"></i>
           </button>
         </div>

@@ -496,7 +496,6 @@ angular.module('services', [])
 
         var params = {
           ruderToken: token.ruderToken,
-          name: name,
           hyperPitch: hyperPitch
         };
 
@@ -562,7 +561,7 @@ angular.module('services', [])
                 setProfileData(data.user).then(function(response){
                   deferred.resolve();
                 }, function(response){
-                  deferred.resolve();
+                  deferred.resolve(response);
                 });
               }
             }
@@ -570,7 +569,7 @@ angular.module('services', [])
           .error(function (data, status, header, config) {
             console.log('refreshProfile  failure', data);
             setTimeout(function() {
-              deferred.resolve();
+              deferred.resolve(response);
             }, 0);
 
           });
@@ -885,7 +884,7 @@ angular.module('services', [])
       return deferred.promise;
     };
 
-    var acceptRequest = function(){
+    var acceptRequest = function(senderUserId){
       var deferred = $q.defer();
       var token = {};
       TokenService.getUserToken().then(function(response){
