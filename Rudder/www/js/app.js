@@ -7,7 +7,7 @@ angular.module('starter', ['ionic', 'controllers', 'services','monospaced.elasti
 
   //http://188.166.244.93
   .constant("SERVER_CONFIG", {
-    "url": "http://192.168.0.116:8080",
+    "url": "http://188.166.244.93",
     "port": ""
   })
 

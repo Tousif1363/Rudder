@@ -72,7 +72,7 @@ angular.module('controllers', [])
     $scope.rateUs = function () {
       console.log('Rate us!!!');
       if ($ionicPlatform.is('android')) {
-        window.open('market://details?id=com.flipkart.android');
+        window.open('market://details?id=com.vibrance.android');
       }
       else if ($ionicPlatform.is('ios')) {
         window.open('itms-apps://itunes.apple.com/us/app/domainsicle-domain-name-search/id511364723?ls=1&mt=8'); // or itms://
@@ -156,9 +156,13 @@ angular.module('controllers', [])
 
     $scope.receivedRequests = {};
 
-    ProfileService.getProfileData().then(function(response){
-      $scope.receivedRequests = response.receivedRequests;
-    });
+    var showNotifications = function(){
+      ProfileService.getProfileData().then(function(response){
+        $scope.receivedRequests = response.receivedRequests;
+      });
+    };
+
+    showNotifications();
 
     $scope.acceptRequest = function(senderUserId){
 
@@ -166,6 +170,7 @@ angular.module('controllers', [])
         template: '<ion-spinner icon="lines" class="spinner-royal"></ion-spinner>'
       });
       EventGuestsDataService.acceptRequest(senderUserId).then(function(response){
+        showNotifications();
         $ionicLoading.hide();
       });
 
@@ -822,6 +827,8 @@ angular.module('controllers', [])
 
         ProfileService.getProfileData().then(function(response){
           $scope.receivedRequests = response.receivedRequests;
+
+          console.log('received requests', $scope.receivedRequests);
 
           if($scope.receivedRequests.length > 0){
             $scope.notificationsAvailable = true;
