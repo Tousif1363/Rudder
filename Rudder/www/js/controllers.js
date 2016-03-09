@@ -860,11 +860,30 @@ angular.module('controllers', [])
     };
   })
 
-  .controller('InviteFriendsCtrl', function($scope, $state){
+  .controller('InviteFriendsCtrl', function($scope, $ionicLoading){
+    $scope.friendsList = {};
+    console.log('Friends List');
 
+    $scope.$on('$ionicView.enter', function() {
+      console.log('InviteFriendsCtrl $ionicView.enter');
+
+      $ionicLoading.show({
+        template: '<ion-spinner icon="lines" class="spinner-royal"></ion-spinner>'
+      });
+      ChatListDataService.fetchChatListData().then(function(){
+        ChatListDataService.getChatListData().then(function(response){
+          $scope.friendsList = response;
+          $ionicLoading.hide();
+        },function(response){
+          $ionicLoading.hide();
+        })
+      });
+
+
+    });
   })
 
-  .controller('PlannerListCtrl', function($scope, $stateParams, $timeout){
+  .controller('PlannerListCtrl', function($scope, $stateParams, $state, $timeout){
     console.log($stateParams.category);
 
     var headerBar;
@@ -884,6 +903,8 @@ angular.module('controllers', [])
 
     $scope.inviteFriends = function(){
       console.log('invite friends');
+
+      $state.go('inviteFriends');
     };
 
   })
