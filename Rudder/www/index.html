@@ -12,6 +12,8 @@
   <link href="css/style.css" rel="stylesheet">
   <link href="css/animate.css" rel="stylesheet">
 
+  <link rel="stylesheet" href="/lib/angular-google-places-autocomplete/src/autocomplete.css">
+
   <!-- ionic/angularjs js -->
   <script src="lib/ionic/js/ionic.bundle.js"></script>
 
@@ -46,6 +48,12 @@
   <!-- Other Libraries-->
   <script src="lib/angular-sanitize/angular-sanitize.min.js"></script>
   <script src="lib/angular-socket-io/socket.js"></script>
+
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAxt_w_KvqaN8HF3mnLGN4j-GyghZCe50Y&libraries=places"></script>
+  <script src="/lib/angular-google-places-autocomplete/src/autocomplete.js"></script>
+
+  <!-- ngAutocomplete -->
+  <script src="/js/ngAutocomplete.js"></script>
 
   <!-- your app's js -->
   <script src="js/app.js"></script>
@@ -106,6 +114,7 @@
     </ion-nav-buttons>
 
     <ion-nav-buttons side="right">
+      <button class="button button-icon button-clear ion-android-bicycle" ng-click="letsGo()"></button>
       <button class="button button-icon button-clear ion-android-refresh" ng-click="refreshProfile()"></button>
       <button ng-if="notificationsAvailable === false" class="button button-icon button-clear ion-android-notifications-none" ng-click="showNotifications()"></button>
       <button ng-if="notificationsAvailable === true" class="button button-icon button-clear ion-android-notifications" ng-click="showNotifications()"></button>
@@ -215,6 +224,64 @@
         <!--</div>-->
       <!--</div>-->
     </ion-content>
+  </ion-view>
+</script>
+
+<script id="plan.html" type="text/ng-template">
+  <ion-view cache-view="false">
+    <ion-header-bar align-title="left" class="bar-light">
+      <h1 class="title">What's your plan today?</h1>
+    </ion-header-bar>
+    <ion-content class="has-header">
+      <ion-list>
+        <ion-item ng-repeat="item in items" class="item item-icon-left" ng-click="selectPlace(item.category)">
+          <i class="icon ion-beer" ng-if="item.category === 'pub'"></i>
+          <i class="icon ion-bag" ng-if="item.category === 'shopping'"></i>
+          <i class="icon ion-ios-americanfootball" ng-if="item.category === 'sports'"></i>
+          <i class="icon ion-easel" ng-if="item.category === 'movie'"></i>
+
+          {{item.title}}
+
+        </ion-item>
+      </ion-list>
+    </ion-content>
+  </ion-view>
+</script>
+
+<script id="plannerList.html" type="text/ng-template">
+  <ion-view id="plannerView" cache-view="false">
+    <ion-header-bar align-title="left" class="bar-light">
+      <!--<h1 class="title">What's your plan today?</h1>-->
+      <!--<input type="text" placeholder="Select a place" g-places-autocomplete ng-model="inputDestination">-->
+      <input type="text" placeholder="Select a place" id="Autocomplete" class="form-control" ng-autocomplete="result1" details="details1" options="options1"/>
+
+
+    </ion-header-bar>
+    <ion-content class="has-header">
+
+    </ion-content>
+    <ion-footer-bar align-title="center" class="bar-balanced" ng-click="inviteFriends()">
+      <h1 class="title">Next</h1>
+    </ion-footer-bar>
+  </ion-view>
+</script>
+
+<script id="inviteFriends.html" type="text/ng-template">
+  <ion-view cache-view="false">
+    <ion-header-bar align-title="left" class="bar-light">
+      <h1 class="title">Invite Friends...</h1>
+    </ion-header-bar>
+    <ion-content class="has-header">
+      <ion-list>
+        <a class="item item-avatar" ng-repeat="item in friendsList" ng-click="">
+          <img ng-src="{{'http://graph.facebook.com/' + item.fbId + '/picture?type=small'}}">
+          <h2 ng-bind="item.name"></h2>
+        </a>
+      </ion-list>
+    </ion-content>
+    <ion-footer-bar align-title="center" class="bar-assertive" ng-click="">
+      <h1 class="title">INVITE</h1>
+    </ion-footer-bar>
   </ion-view>
 </script>
 

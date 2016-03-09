@@ -839,7 +839,52 @@ angular.module('controllers', [])
       });
     };
 
+    $scope.letsGo = function(){
+      console.log("lets go");
+      $state.go('plan');
+    };
 
+
+
+  })
+
+  .controller('PlannerCtrl', function($scope, $state){
+    $scope.items = [{title: 'Play a sport', category: 'sports'},
+      {title: 'Go Shopping', category: 'shopping'},
+      {title: 'Watch a movie', category: 'movie'},
+      {title: 'Beer at a pub', category: 'pub'}];
+
+    $scope.selectPlace = function(category){
+      console.log('selecting a place');
+      $state.go('plannerList',{category: category});
+    };
+  })
+
+  .controller('InviteFriendsCtrl', function($scope, $state){
+
+  })
+
+  .controller('PlannerListCtrl', function($scope, $stateParams, $timeout){
+    console.log($stateParams.category);
+
+    var headerBar;
+    var txtInput;
+    /*var options = {componentRestrictions: {country: 'us'}};*/
+
+    $scope.inputDestination = '';
+
+    $scope.result1 = '';
+    $scope.options1 = null;
+    $scope.details1 = '';
+
+    $timeout(function() {
+      headerBar = document.body.querySelector('#plannerView .bar-header');
+      txtInput = angular.element(headerBar.querySelector('input'));
+    }, 0);
+
+    $scope.inviteFriends = function(){
+      console.log('invite friends');
+    };
 
   })
 

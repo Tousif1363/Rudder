@@ -3,7 +3,7 @@
 // angular.module is a global place for creating, registering and retrieving Angular modules
 // 'starter' is the name of this angular module example (also set in a <body> attribute in index.html)
 // the 2nd parameter is an array of 'requires'
-angular.module('starter', ['ionic', 'controllers', 'services','monospaced.elastic', 'angularMoment', 'ngCordova', 'btford.socket-io'])
+angular.module('starter', ['ionic', 'controllers', 'services','monospaced.elastic', 'angularMoment', 'ngCordova', 'btford.socket-io', 'google.places','ngAutocomplete'])
 
   //http://188.166.244.93
   .constant("SERVER_CONFIG", {
@@ -97,6 +97,23 @@ angular.module('starter', ['ionic', 'controllers', 'services','monospaced.elasti
         controller: 'WelcomeCtrl'
       })
 
+      .state('plan', {
+        url: '/plan',
+        templateUrl: "plan.html",
+        controller: 'PlannerCtrl'
+      })
+
+      .state('plannerList', {
+        url: "/plannerList/:category",
+        templateUrl: "plannerList.html",
+        controller: 'PlannerListCtrl'
+      })
+
+      .state('inviteFriends', {
+        url: "/inviteFriends",
+        templateUrl: "inviteFriends.html",
+        controller: 'InviteFriendsCtrl'
+      })
 
 
       .state('menu.home', {
