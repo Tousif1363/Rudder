@@ -860,8 +860,11 @@ angular.module('controllers', [])
     };
   })
 
-  .controller('InviteFriendsCtrl', function($scope, $ionicLoading){
+  .controller('InviteFriendsCtrl', function($scope, $state, $stateParams, $ionicLoading, ChatListDataService, LetsGoService){
+    console.log($stateParams.category);
+    console.log($stateParams.placeId);
     $scope.friendsList = {};
+    $scope.friends = [];
     console.log('Friends List');
 
     $scope.$on('$ionicView.enter', function() {
@@ -872,7 +875,15 @@ angular.module('controllers', [])
       });
       ChatListDataService.fetchChatListData().then(function(){
         ChatListDataService.getChatListData().then(function(response){
+          console.log(response);
           $scope.friendsList = response;
+          angular.forEach($scope.friendsList, function(value, key) {
+            console.log('Value is : ', value);
+            console.log('key is:', key);
+            var item = {fbId: value.fbId, name: value.name, userId: value.userId, selected: false};
+            $scope.friends.push(item);
+          });
+
           $ionicLoading.hide();
         },function(response){
           $ionicLoading.hide();
@@ -881,6 +892,30 @@ angular.module('controllers', [])
 
 
     });
+
+
+    $scope.toggle = function(index){
+      console.log('Index is', index);
+      $scope.friends[index].selected = !$scope.friends[index].selected;
+    };
+
+    $scope.invite = function(){
+      var inviteeList = [];
+      angular.forEach($scope.friends, function(value, key) {
+        if(value.selected){
+          var item = {fbId: value.fbId, name: value.name, userId: value.userId};
+          inviteeList.push(item);
+        }
+
+      });
+
+      console.log('Invitee list is : ', inviteeList);
+
+      LetsGoService.createEvent($stateParams.placeId, 'Temp name', inviteeList).then(function(response){
+        $state.go('menu.tabs.discover');
+      });
+    }
+
   })
 
   .controller('PlannerListCtrl', function($scope, $stateParams, $state, $timeout){
@@ -901,11 +936,19 @@ angular.module('controllers', [])
       txtInput = angular.element(headerBar.querySelector('input'));
     }, 0);
 
-    $scope.inviteFriends = function(){
+    $scope.inviteFriends = function(placeId){
       console.log('invite friends');
 
-      $state.go('inviteFriends');
+      $state.go('inviteFriends', {category: $stateParams.category, placeId: placeId});
     };
+
+    $scope.$watch('result1', function() {
+      console.log('Search result: ',$scope.result1);
+    });
+
+    $scope.$watch('details1', function() {
+      console.log('Details of the selected place : ',$scope.details1);
+    });
 
   })
 

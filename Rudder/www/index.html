@@ -43,7 +43,7 @@
 
   <!--<script src='lib/facebook-connect-plugin/index.js'></script>-->
 
-  <script src="http://188.166.244.93/socket.io/socket.io.js"></script>
+  <script src="http://192.168.0.111:8080/socket.io/socket.io.js"></script>
 
   <!-- Other Libraries-->
   <script src="lib/angular-sanitize/angular-sanitize.min.js"></script>
@@ -259,10 +259,21 @@
     </ion-header-bar>
     <ion-content class="has-header">
 
+      <a class="item item-thumbnail-left" href="" ng-if="details1 !== ''">
+        <img src="{{details1.icon}}">
+        <h2>{{details1.name}}</h2>
+        <p>{{'Rating :'+ details1.rating}}</p>
+        <p>{{details1.formatted_address}}</p>
+      </a>
     </ion-content>
-    <ion-footer-bar align-title="center" class="bar-balanced" ng-click="inviteFriends()">
+    <!--<ion-footer-bar align-title="center" class="bar-balanced" ng-click="inviteFriends()" ng-disabled="true">
       <h1 class="title">Next</h1>
-    </ion-footer-bar>
+    </ion-footer-bar>-->
+    <div class="bar bar-footer">
+      <button class="button button-full button-balanced" ng-disabled="details1 === ''" ng-click="inviteFriends(details1.place_id)">
+        Next
+      </button>
+    </div>
   </ion-view>
 </script>
 
@@ -273,15 +284,21 @@
     </ion-header-bar>
     <ion-content class="has-header">
       <ion-list>
-        <a class="item item-avatar" ng-repeat="item in friendsList" ng-click="">
+        <a class="item item-avatar item-icon-right" ng-repeat="item in friends" ng-click="toggle($index)">
           <img ng-src="{{'http://graph.facebook.com/' + item.fbId + '/picture?type=small'}}">
           <h2 ng-bind="item.name"></h2>
+          <i class="icon ion-android-done" ng-if="item.selected"></i>
         </a>
       </ion-list>
     </ion-content>
-    <ion-footer-bar align-title="center" class="bar-assertive" ng-click="">
+    <!--<ion-footer-bar align-title="center" class="bar-assertive" ng-click="">
       <h1 class="title">INVITE</h1>
-    </ion-footer-bar>
+    </ion-footer-bar>-->
+    <div class="bar bar-footer">
+      <button class="button button-full button-assertive" ng-disabled="" ng-click="invite()">
+        Next
+      </button>
+    </div>
   </ion-view>
 </script>
 

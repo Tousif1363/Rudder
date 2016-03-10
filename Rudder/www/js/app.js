@@ -6,8 +6,9 @@
 angular.module('starter', ['ionic', 'controllers', 'services','monospaced.elastic', 'angularMoment', 'ngCordova', 'btford.socket-io', 'google.places','ngAutocomplete'])
 
   //http://188.166.244.93
+  //http://192.168.0.116:8080
   .constant("SERVER_CONFIG", {
-    "url": "http://188.166.244.93",
+    "url": "http://192.168.0.111:8080",
     "port": ""
   })
 
@@ -64,7 +65,7 @@ angular.module('starter', ['ionic', 'controllers', 'services','monospaced.elasti
   })
 
   .config(function($stateProvider, $urlRouterProvider, $ionicConfigProvider) {
-    $//ionicConfigProvider.tabs.position("bottom");
+    //$ionicConfigProvider.tabs.position("bottom");
 
     $stateProvider
 
@@ -110,7 +111,7 @@ angular.module('starter', ['ionic', 'controllers', 'services','monospaced.elasti
       })
 
       .state('inviteFriends', {
-        url: "/inviteFriends",
+        url: "/inviteFriends/:category/:placeId",
         templateUrl: "inviteFriends.html",
         controller: 'InviteFriendsCtrl'
       })

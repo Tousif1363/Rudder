@@ -438,6 +438,61 @@ angular.module('services', [])
   };
   })
 
+  .service('LetsGoService', function($q, $http, UserService, TokenService, SERVER_CONFIG) {
+
+    var createEvent = function(placeId, eventName, inviteeList){
+      var deferred = $q.defer();
+
+      TokenService.getUserToken().then(function(response) {
+        var token = response;
+
+        UserService.getRudderData().then(function(response){
+        /*var hostData = {name: response.name, userId: response.userId, fbId : response.fbId};*/
+          var hostData = [];
+
+        var params = {ruderToken : token.ruderToken, place_id : placeId ,eventName: eventName,hosts : hostData, usersInvited : inviteeList, startTime : ''};
+
+        console.log('params to /letsgo/create', params);
+
+        $http.post(SERVER_CONFIG.url+'/letsgo/create', params)
+          .success(function (data, status, headers, config) {
+            console.log('letsgo create success', data);
+
+            if(data.hasOwnProperty('success') && data.success === true) {
+              deferred.resolve();
+            }
+
+
+          })
+          .error(function (data, status, header, config) {
+            console.log('letsgo create  failure', data);
+            setTimeout(function() {
+              deferred.resolve();
+            }, 0);
+
+          });
+
+      });
+
+
+      }, function(response){
+        console.log('cannot get user token');
+
+
+        setTimeout(function() {
+          deferred.resolve();
+        }, 0);
+
+      });
+
+      return deferred.promise;
+
+    };
+    return{
+      createEvent: createEvent
+    }
+  })
+
   .service('TokenService', function($q) {
 
     var setUserToken = function(user_token) {
