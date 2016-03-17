@@ -156,13 +156,19 @@ angular.module('controllers', [])
 
     $scope.receivedRequests = {};
 
+    $scope.$on('$ionicView.enter', function() {
+      showNotifications();
+    });
+
     var showNotifications = function(){
       ProfileService.getProfileData().then(function(response){
         $scope.receivedRequests = response.receivedRequests;
+        console.log('get profile response:', response);
+        console.log('received requests:', $scope.receivedRequests);
+
       });
     };
 
-    showNotifications();
 
     $scope.acceptRequest = function(senderUserId){
 
@@ -170,7 +176,9 @@ angular.module('controllers', [])
         template: '<ion-spinner icon="lines" class="spinner-royal"></ion-spinner>'
       });
       EventGuestsDataService.acceptRequest(senderUserId).then(function(response){
-        showNotifications();
+        ProfileService.refreshProfileData().then(function(response){
+          showNotifications();
+        });
         $ionicLoading.hide();
       });
 
@@ -184,6 +192,7 @@ angular.module('controllers', [])
     $scope.targetUpdated = false;
     $scope.targetSet = false;
     $scope.items = {};
+    $scope.posAvailable = true;
 
     //Ensures data is loaded every time the screen is opened.
     $rootScope.$on('$stateChangeStart', function (event, toState, toParams, fromState, fromParams) {
@@ -203,7 +212,6 @@ angular.module('controllers', [])
     });*/
 
     var getNearbyPlaces = function(){
-
 
       $ionicLoading.show({
         template: '<ion-spinner icon="lines" class="spinner-royal"></ion-spinner>'
@@ -244,6 +252,10 @@ angular.module('controllers', [])
                   $scope.items = response;
                   $ionicLoading.hide();
                 });
+              }, function(response){
+                console.log('get places failure');
+                $ionicLoading.hide();
+
               });
 
             }
@@ -253,7 +265,40 @@ angular.module('controllers', [])
             }
           }
           else if(!$scope.targetSet){
-            $cordovaGeolocation.getCurrentPosition(posOptions).then(function (position) {
+
+            navigator.geolocation.getCurrentPosition(function(position) {
+              //set the target updated to false if computing for the first time.
+              $scope.targetSet = true;
+              $scope.posAvailable = true;
+
+              var lat = position.coords.latitude;
+              var long = position.coords.longitude;
+
+              var params = {ruderToken: token.ruderToken, lat: lat, long: long};
+              console.log(token.ruderToken);
+              console.log(lat);
+              console.log(long);
+              console.log(params);
+
+              GeoAlert.begin(lat, long, function () {
+                console.log('TARGET');
+                $scope.targetUpdated = true;
+              });
+
+              EventsService.getNearbyPlaces(params).then(function(response){
+                EventsService.getEventsData().then(function(response){
+                  $scope.items = response;
+                  console.log('Distance',parseInt(response[0].distance * 1000));
+                  console.log(parseInt(response[0].distance * 1000) > parseInt(50));
+                  $ionicLoading.hide();
+                });
+              });
+
+            },function(){
+              $scope.posAvailable = false;
+            });
+
+            /*$cordovaGeolocation.getCurrentPosition(posOptions).then(function (position) {
               //set the target updated to false if computing for the first time.
               $scope.targetSet = true;
               var lat = position.coords.latitude;
@@ -280,8 +325,11 @@ angular.module('controllers', [])
             }, function (err) {
               $ionicLoading.hide();
               console.log(err);
-            });
+            });*/
           }
+        }
+        else{
+          $ionicLoading.hide();
         }
 
       });
@@ -340,7 +388,7 @@ angular.module('controllers', [])
         if(res){
           //$state.go('menu.tabs.eventDetails');
           //console.log($scope.items[index].id);
-          EventsService.checkInEvent($scope.items[index].id);
+          EventsService.checkInEvent($scope.items[index].id, $scope.items[index].name);
 
           console.log('You wish to join the event :)');
         }
@@ -351,19 +399,19 @@ angular.module('controllers', [])
     };
   })
 
-  .controller('EventDataCtrl', function($scope, $ionicModal, $ionicLoading, $ionicPopover, $q, $http,  EventGuestsDataService, EventsService, UserService, TokenService, SERVER_CONFIG, socket){
+  .controller('EventDataCtrl', function($scope, $ionicModal, $stateParams, $ionicLoading, $ionicPopover, $q, $http,  EventGuestsDataService, EventsService, UserService, TokenService, SERVER_CONFIG, socket){
     //$scope.lists = EventGuestsDataService.getEventGuestsData();
     /*$scope.data = [{guestName : 'Hemant', guestTitle : 'UX/UI designer at Stayglad'},{guestName : 'Tousif',guestTitle : 'HMI developer at Harman'},
       {guestName : 'Ved', guestTitle : 'Big data expert at Oracle'},{guestName : 'Raj', guestTitle : 'Market research Analyst at SBD'},
       {guestName : 'Bhaskar',guestTitle : 'UX/UI designer at Stayglad'},{guestName : 'Manasvi',guestTitle : 'UX/UI designer at Stayglad'},
       {guestName : 'Rakesh', guestTitle : 'UX/UI designer at Stayglad'},{guestName : 'Pritam',guestTitle : 'UX/UI designer at Stayglad'}];*/
 
+    console.log('stateParams placeName', $stateParams.placeName);
 
-
+    $scope.placeName = $stateParams.placeName;
     $scope.grid = [];
     $scope.numCols = 3;
-    $scope.totalRows = Math.ceil(getSize($scope.data) / $scope.numCols);
-    $scope.lastCol = getSize($scope.data) % $scope.numCols;
+
 
     $scope.toTransition = false;
     $scope.dir = "default";
@@ -393,6 +441,15 @@ angular.module('controllers', [])
           }
         }
         $scope.data = guestList;
+
+        if($scope.numCols > getSize($scope.data)){
+          $scope.totalRows = 1;
+        }
+        else{
+          $scope.totalRows = Math.ceil(getSize($scope.data) / $scope.numCols);
+        }
+        $scope.lastCol = getSize($scope.data) % $scope.numCols;
+
         $scope.lists = listToMatrix($scope.data, $scope.numCols);
       });
     };
@@ -400,7 +457,6 @@ angular.module('controllers', [])
     //update the view with the latest data.
     fetchGuestsData();
 
-    $scope.placeName = JSON.parse(localStorage.getItem("placeName"));
 
     socket.on('update checkin', function(message){
       console.log('update checkin' ,message);
@@ -538,11 +594,36 @@ angular.module('controllers', [])
               });
           }
         });
-
-
-
-
     };
+
+    function notifyServerSocketAddFriend(userId){
+      console.log("in notifyServerSocketAddFriend");
+      console.log('userId :', userId);
+
+      if(typeof(socket) !== 'undefined') {
+        console.log("socket defined");
+
+        var data = {userId : userId};
+        /*socket.emit('send request', data, function (result) {
+          console.log('send request emitted');
+          if (!result) {
+            console.log('send request successful');
+          } else {
+            console.log("send request failure");
+          }
+        });*/
+        console.log('data to be sent for send request :', data);
+
+        socket.emit('send request', data , function (result) {
+          console.log('send request emitted.');
+          if (!result) {
+            console.log('There was an error sending send request');
+          } else {
+            console.log("request sent");
+          }
+        });
+      }
+    }
 
     $scope.addFriend = function(userId){
 
@@ -550,6 +631,9 @@ angular.module('controllers', [])
       $ionicLoading.show({
         template: '<ion-spinner icon="lines" class="spinner-royal"></ion-spinner>'
       });
+
+      // to server to notify the other user
+      /*notifyServerSocketAddFriend(userId);*/
 
       var token = {};
       TokenService.getUserToken().then(function(response){
@@ -562,6 +646,9 @@ angular.module('controllers', [])
             .success(function (data, status, headers, config) {
               console.log('sendrequest success', data);
 
+              // to server to notify the other user
+              notifyServerSocketAddFriend(userId);
+              // modify current realtionship
               modifyRelationOnRequestSent(userId);
 
               if (data.hasOwnProperty('success') && data.success === true) {
@@ -656,9 +743,10 @@ angular.module('controllers', [])
 
     $scope.onSwipeLeft = function() {
       console.log("Left swiped");
-      console.log($scope.colIndex);
-      console.log($scope.rowIndex);
-      console.log($scope.totalRows);
+      console.log('Col index:',$scope.colIndex);
+      console.log('Row index:',$scope.rowIndex);
+      console.log('Total rows:', $scope.totalRows);
+      console.log('last col index:', $scope.lastCol);
 
       $scope.dir = "left";
 
@@ -759,7 +847,7 @@ angular.module('controllers', [])
     });
   })
 
-  .controller('ChatListDataCtrl', function($scope, $state, $ionicLoading, ChatListDataService ){
+  .controller('ChatListDataCtrl', function($scope, $state, $ionicLoading, ChatListDataService, pouchCollection ){
     $scope.chatList = {};
     console.log('Chat List');
 
@@ -769,8 +857,18 @@ angular.module('controllers', [])
       $ionicLoading.show({
         template: '<ion-spinner icon="lines" class="spinner-royal"></ion-spinner>'
       });
-      ChatListDataService.fetchChatListData().then(function(){
+      ChatListDataService.fetchChatListData().then(function(response){
+        console.log('fetch chat data response', response);
+
+
         ChatListDataService.getChatListData().then(function(response){
+          console.log('get chat list response', response);
+          /*$scope.chatList = pouchCollection('chatList');
+
+
+          $scope.chatList.$insert(response).then(function(){
+            console.log('$scope.chatList :', $scope.chatList);
+          });*/
           $scope.chatList = response;
           $ionicLoading.hide();
         },function(response){
@@ -806,11 +904,24 @@ angular.module('controllers', [])
     };
   })
 
-  .controller('TabCtrl', function($scope, $state, $ionicLoading, ProfileService){
+  .controller('TabCtrl', function($scope, $state, $ionicLoading, ProfileService, socket){
     $scope.notificationsAvailable = false;
     $scope.profileData = {};
     $scope.notifications = {};
     $scope.receivedRequests = {};
+
+    $scope.$on('$ionicView.enter', function() {
+      /*ProfileService.getProfileData().then(function(response){
+        $scope.receivedRequests = response.receivedRequests;
+
+        console.log('received requests', $scope.receivedRequests);
+
+        if($scope.receivedRequests.length > 0){
+          $scope.notificationsAvailable = true;
+        }
+      });*/
+      refreshProfile();
+    });
 
 
     $scope.showNotifications = function(){
@@ -819,10 +930,18 @@ angular.module('controllers', [])
       $state.go('menu.notifications');
     };
 
-    $scope.refreshProfile = function(){
-      $ionicLoading.show({
-        template: '<ion-spinner icon="lines" class="spinner-royal"></ion-spinner>'
+    if(typeof(socket) !== 'undefined') {
+      console.log('receive request received on tabCtrl');
+
+      socket.on("receive request", function(message){
+        refreshProfile();
       });
+    }
+
+    var refreshProfile = function(){
+      /*$ionicLoading.show({
+        template: '<ion-spinner icon="lines" class="spinner-royal"></ion-spinner>'
+      });*/
       ProfileService.refreshProfileData().then(function(response){
 
         ProfileService.getProfileData().then(function(response){
@@ -835,7 +954,7 @@ angular.module('controllers', [])
           }
         });
 
-        $ionicLoading.hide();
+        /*$ionicLoading.hide();*/
       });
     };
 
@@ -1035,54 +1154,60 @@ angular.module('controllers', [])
           getMessages().then(function(){
 
 
-            socket.on('new message', function (message) {
-              console.log('New message received by',$scope.user);
-              console.log('msgLog',$scope.msgLog);
-              if ($scope.msgLog !== undefined) {
-                console.log('new message data defined');
-                console.log($scope.msgLog);
-                $scope.msgLog.push(message);
-                UserMessagesDataService.setUserMessagesData($scope.toUser._id, {messages : $scope.msgLog});
-              }
-              else{
-                console.log('new message data undefined');
-                UserMessagesDataService.setUserMessagesData($scope.toUser._id, {messages : [message]});
-                console.log($scope.msgLog);
-                //setMessages($scope.toUser._id, {messages : [message]});
-              }
+            if(typeof(socket) !== 'undefined') {
+              socket.on('new message', function (message) {
+                console.log('New message received by', $scope.user);
+                console.log('msgLog', $scope.msgLog);
+                if ($scope.msgLog !== undefined) {
+                  console.log('new message data defined');
+                  console.log($scope.msgLog);
+                  $scope.msgLog.push(message);
+                  UserMessagesDataService.setUserMessagesData($scope.toUser._id, {messages: $scope.msgLog});
+                }
+                else {
+                  console.log('new message data undefined');
+                  UserMessagesDataService.setUserMessagesData($scope.toUser._id, {messages: [message]});
+                  console.log($scope.msgLog);
+                  //setMessages($scope.toUser._id, {messages : [message]});
+                }
 
-              getMessages();
+                getMessages();
 
-            });
+              });
+            }
 
             var oldMessagesDataToServer = {
               _id: $scope.toUser._id
             };
 
             console.log('Old messages data',oldMessagesDataToServer);
-            socket.emit('old messages', oldMessagesDataToServer , function (result) {
-              console.log('Old messages emitted!');
-              if (!result) {
-                console.log('Old messages notified!');
-              } else {
-                console.log("Failure in emitting old messages");
-              }
-            });
-
-            socket.on('chat history', function (message) {
-              console.log('chat history received by',$scope.user);
-              console.log('chat history value', message);
-
-              $scope.msgLog = message.msg;
-              console.log({messages : $scope.msgLog});
-              MockService.setUserMessages($scope.toUser._id, {messages : $scope.msgLog}).then(function(){
-                getMessages().then(function(){
-
-                });
+            if(typeof(socket) !== 'undefined') {
+              socket.emit('old messages', oldMessagesDataToServer, function (result) {
+                console.log('Old messages emitted!');
+                if (!result) {
+                  console.log('Old messages notified!');
+                } else {
+                  console.log("Failure in emitting old messages");
+                }
               });
+            }
+
+            if(typeof(socket) !== 'undefined') {
+              socket.on('chat history', function (message) {
+                console.log('chat history received by', $scope.user);
+                console.log('chat history value', message);
+
+                $scope.msgLog = message.msg;
+                console.log({messages: $scope.msgLog});
+                MockService.setUserMessages($scope.toUser._id, {messages: $scope.msgLog}).then(function () {
+                  getMessages().then(function () {
+
+                  });
+                });
                 //UserMessagesDataService.setUserMessagesData();
 
-            });
+              });
+            }
 
             });
           });
@@ -1162,7 +1287,7 @@ angular.module('controllers', [])
           userId: $scope.user._id
         };
 
-        //console.log('senMessage emitting.');
+        console.log('senMessage emitting.');
 
         socket.emit('send message', messageToServer , function (result) {
           console.log('New message emitted by',$scope.user);

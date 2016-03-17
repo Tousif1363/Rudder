@@ -12,7 +12,13 @@
   <link href="css/style.css" rel="stylesheet">
   <link href="css/animate.css" rel="stylesheet">
 
-  <link rel="stylesheet" href="/lib/angular-google-places-autocomplete/src/autocomplete.css">
+  <!-- Floating button -->
+  <link href="lib/ng-material-floating-button/mfb/dist/mfb.css" rel="stylesheet"/>
+
+
+  <script type="text/javascript" charset="utf-8" src="js/PushNotification.js"></script>
+
+  <!--<link rel="stylesheet" href="/lib/angular-google-places-autocomplete/src/autocomplete.css">-->
 
   <!-- ionic/angularjs js -->
   <script src="lib/ionic/js/ionic.bundle.js"></script>
@@ -38,25 +44,33 @@
   <script src="cordova.js"></script>
 
 
-  <!--<script src="lib/cordova-facebook-connect-plugin/lib/cordova-facebook-connect-plugin.js"></script>-->
+  <script src="lib/cordova-facebook-connect-plugin/lib/cordova-facebook-connect-plugin.js"></script>
 
 
   <!--<script src='lib/facebook-connect-plugin/index.js'></script>-->
 
-  <script src="http://192.168.0.111:8080/socket.io/socket.io.js"></script>
+  <script src="http://188.166.244.93/socket.io/socket.io.js"></script>
 
   <!-- Other Libraries-->
   <script src="lib/angular-sanitize/angular-sanitize.min.js"></script>
   <script src="lib/angular-socket-io/socket.js"></script>
+  <script src="lib/ng-material-floating-button/src/mfb-directive.js"></script>
 
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAxt_w_KvqaN8HF3mnLGN4j-GyghZCe50Y&libraries=places"></script>
-  <script src="/lib/angular-google-places-autocomplete/src/autocomplete.js"></script>
+  <!--<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAxt_w_KvqaN8HF3mnLGN4j-GyghZCe50Y&libraries=places"></script>-->
+  <!--<script src="lib/angular-google-places-autocomplete/src/autocomplete.js"></script>-->
+
+  <!-- pouchdb libraries -->
+  <script src="lib/pouchdb/dist/pouchdb.js"></script>
+  <script src="js/angular-pouchdb.js"></script>
+  <script src="js/ng-pouchdb-collection.js"></script>
 
   <!-- ngAutocomplete -->
   <script src="/js/ngAutocomplete.js"></script>
 
   <!-- your app's js -->
   <script src="js/app.js"></script>
+  <script src="js/RequestsService.js"></script>
+
   <script src="js/controllers.js"></script>
   <script src="js/services.js"></script>
 
@@ -77,12 +91,12 @@
           <div class="item item-avatar-center-big">
             <img ng-src="{{'http://graph.facebook.com/' + user.userID + '/picture?type=large'}}">
             <h2 ng-bind="user.name"></h2>
-            <p>Title</p>
+            <!--<p>Title</p>-->
           </div>
         </div>
         <ul class="list list-settings padding">
-          <a href ="#/menu/tabs/discover" class="item item-icon-left" menu-close><i class="icon ion-location"></i>Tag place</a>
-          <a href ="#/menu/home" class="item item-icon-left" menu-close><i class="icon ion-settings"></i>App Setting</a>
+          <a href ="#/menu/tabs/discover" class="item item-icon-left" menu-close><i class="icon ion-location"></i>Home</a>
+          <!--<a href ="#/menu/home" class="item item-icon-left" menu-close><i class="icon ion-settings"></i>App Setting</a>-->
           <!--<a href="#" class="item item-icon-left" menu-close ng-click="rateUs()"><i class="icon ion-android-star"></i>Rate this app</a>-->
         </ul>
       </ion-content>
@@ -114,8 +128,8 @@
     </ion-nav-buttons>
 
     <ion-nav-buttons side="right">
-      <button class="button button-icon button-clear ion-android-bicycle" ng-click="letsGo()"></button>
-      <button class="button button-icon button-clear ion-android-refresh" ng-click="refreshProfile()"></button>
+      <!--<button class="button button-icon button-clear ion-android-bicycle" ng-click="letsGo()"></button>-->
+      <!--<button class="button button-icon button-clear ion-android-refresh" ng-click="refreshProfile()"></button>-->
       <button ng-if="notificationsAvailable === false" class="button button-icon button-clear ion-android-notifications-none" ng-click="showNotifications()"></button>
       <button ng-if="notificationsAvailable === true" class="button button-icon button-clear ion-android-notifications" ng-click="showNotifications()"></button>
     </ion-nav-buttons>
@@ -148,7 +162,7 @@
         <div class="col">
           <img ng-src="{{'http://graph.facebook.com/' + user.userID + '/picture?type=large'}}" class="profile-picture-main">
           <h2 class="profile-name" ng-bind="user.name"></h2>
-          <p class="profile-title">Title</p>
+          <!--<p class="profile-title">Title</p>
           <p class="profile-caption">Caption</p>
           <div class="row">
             <div class="col col-25 col-offset-25">
@@ -159,19 +173,15 @@
               <p class="lg-red">100</p>
               <p class="md-white">Followers</p>
             </div>
-          </div>
+          </div>-->
 
           <div class="list">
-            <label class="item item-input item-stacked-label">
-              <span class="input-label">Name</span>
-              <input type="text" ng-model="userData.name">
-            </label>
             <label class="item item-input item-stacked-label">
               <span class="input-label">Hyper Pitch</span>
               <input type="text" ng-model="userData.hyperpitch" placeholder="Enter your hyperpitch here">
             </label>
             <button class="button button-block button-positive" ng-click="updateProfile(userData.name, userData.hyperpitch)">
-              save
+              Save
             </button>
           </div>
 
@@ -210,19 +220,12 @@
     <ion-content scroll="false">
       <div class="top-content row">
         <div class="app-copy col col-top">
+          <img src="img/Logo.png" style="height: 100px; width: 100px;">
           <h1 class="app-logo">Vibrance</h1>
-          <p class="app-tagline">
-            >>Connect<<
+          <p class="app-tagline">Plan | Checkin | Connect
           </p>
         </div>
       </div>
-      <!--<div class="bottom-content row">-->
-        <!--<div class="col col-bottom">-->
-          <!--<a class="facebook-sign-in button button-block" ng-click="checkUserLoginStatus()">-->
-            <!--Log in with Facebook-->
-          <!--</a>-->
-        <!--</div>-->
-      <!--</div>-->
     </ion-content>
   </ion-view>
 </script>
@@ -307,17 +310,28 @@
     <ion-content scroll="false">
       <div class="top-content row">
         <div class="app-copy col col-top">
+          <img src="img/Logo.png" style="height: 100px; width: 100px;">
           <h1 class="app-logo">Vibrance</h1>
-          <p class="app-tagline">
-            Connecting people.
+          <p class="app-tagline">Plan | Checkin | Connect
           </p>
         </div>
       </div>
-      <div class="bottom-content row">
-        <div class="col col-bottom">
-          <a class="facebook-sign-in button button-block" ng-click="facebookSignIn()">
-            Log in with Facebook
-          </a>
+      <div class="bottom-content">
+        <div class="row">
+          <div class="col">
+            <p class="login-tagline">
+              Log in to get started ...
+            </p>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col col-bottom">
+            <!--<a class="facebook-sign-in button button-block button-icon icon ion-social-facebook" ng-click="facebookSignIn()">
+            </a>-->
+            <a class="facebook-sign-in button button-block" ng-click="facebookSignIn()">
+              Log in with Facebook
+            </a>
+          </div>
         </div>
       </div>
     </ion-content>
@@ -325,25 +339,36 @@
 </script>
 
 <script id="discover.html" type="text/ng-template">
-  <ion-view view-title="" class="background-color-grey">
+  <ion-view view-title="" class="discover-view">
     <!--<ion-header-bar class="bar-royal bar-subheader item-input-inset" position-bars-and-content>-->
-      <!--<label class="item-input-wrapper">-->
-        <!--<i class="icon ion-ios-search placeholder-icon"></i>-->
-        <!--<input type="search" placeholder="Search">-->
-      <!--</label>-->
+    <!--<label class="item-input-wrapper">-->
+    <!--<i class="icon ion-ios-search placeholder-icon"></i>-->
+    <!--<input type="search" placeholder="Search">-->
+    <!--</label>-->
     <!--</ion-header-bar>-->
     <ion-content class="padding has-header has-tabs-top">
-      <ion-list ng-controller="EventsCtrl">
+      <h5 class="places-heading">Places Nearby Your Location</h5>
+      <div class="card" ng-if="posAvailable">
+        <div class="item item-text-wrap">
+          Please enable location on your device.
+        </div>
+      </div>
+      <ion-list ng-controller="EventsCtrl" class="discover-places-list">
         <!--<i class="icon ion-beer" ng-if="jQuery.isEmptyObject($scope.items)"></i>-->
-        <ion-item ng-repeat="item in items" class="item item-icon-left" href="#" ng-click="showPopupIfNotCheckedIn($index)">
+        <ion-item ng-repeat="item in items" class="item item-icon-left item-button-right" href="#">
+          <i class="icon ion-android-restaurant"></i>
           <i class="icon ion-beer" ng-if="item.category === 'pub'"></i>
           <i class="icon ion-coffee" ng-if="item.category === 'cafe'"></i>
           <i class="icon ion-icecream" ng-if="item.category === 'ic'"></i>
           <i class="icon ion-ios-briefcase" ng-if="item.category === 'tech'"></i>
           <i class="icon ion-android-restaurant" ng-if="item.category === 'restaurant'"></i>
 
-          {{item.name}}
-          <p ng-bind="+item.distance.toFixed(1) + 'kms away'"></p>
+          <p class="item-name">{{item.name}}</p>
+          <p class="distance" ng-bind="+item.distance.toFixed(2) + ' kms away'"></p>
+          <!--<button class="button button-small button-assertive" ng-disabled="item.distance.toFixed(1) > 0.5"
+                  ng-click="showPopupIfNotCheckedIn($index)">CHECK IN</button>-->
+          <button class="button button-small button-assertive" ng-disabled="item.distance.toFixed(2) > 0.05"
+                  ng-click="showPopupIfNotCheckedIn($index)">CHECK IN</button>
         </ion-item>
       </ion-list>
     </ion-content>
@@ -360,10 +385,10 @@
           </div>
         </div>
         <div class="custom-placeholder">
-          <br><br><br>
+          <br><br><br><br>
           <h2>{{item.name}}</h2>
           <p>{{profileData.hyperPitch}}</p>
-              <img src="img/requestAdd.png" class="header-person-add" style="height: 32px;width: 32px; " ng-if="item.relation === 'stranger'" ng-click="addFriend(item.userId)">
+              <img src="img/sendChatRequest.ico" class="header-person-add" style="height: 32px;width: 32px; " ng-if="item.relation === 'stranger'" ng-click="addFriend(item.userId)">
               <img src="img/requestSent.png" class="header-person-add" style="height: 32px;width: 32px;" ng-if="item.relation === 'sentRequest'">
               <img src="img/requestSent.png" class="header-person-add" style="height: 32px;width: 32px;" ng-if="item.relation === 'receivedRequest'">
 
@@ -434,7 +459,7 @@
 <script id="eventDetails.html" type="text/ng-template">
   <ion-view class="background-color-grey">
     <ion-nav-title>
-      <button class="button button-icon icon ion-arrow-down-b icon-right" ng-click="openPopover($event)">{{placeName.placeName}}
+      <button class="button button-icon icon ion-arrow-down-b icon-right" ng-click="openPopover($event)">{{placeName}}
       </button>
     </ion-nav-title>
     <ion-header-bar class="bar-royal bar-subheader item-input-inset">
@@ -444,6 +469,7 @@
       </label>
     </ion-header-bar>
     <ion-content class="padding">
+      <h5 class="events-subheading">Users checked in</h5>
       <div class="row row-wrap" ng-repeat="row in lists" ng-init="rowIndex = $index">
         <div class="col col-33" ng-repeat="list in row" ng-init="colIndex = $index" ng-click="openModal(list, colIndex, rowIndex, 'slideInUp')">
           <div class="card card-guests margin-0">
@@ -528,7 +554,7 @@
     <ion-content>
       <div class="card">
         <div class="item item-text-wrap">
-          This page is under construction
+          Feed will be up and running soon
         </div>
       </div>
     </ion-content>
@@ -537,8 +563,10 @@
 
 <script id="chat.html" type="text/ng-template">
   <ion-view id="chatView"
-            cache-view="false"
-            view-title="<i class='icon ion-chatbubble user-messages-top-icon'></i> <div class='msg-header-username'>{{toUser.username}}</div>">
+            cache-view="false">
+    <ion-nav-title>
+      {{toUser.username}}
+    </ion-nav-title>
 
     <div class="loader-center" ng-if="!doneLoading">
       <div class="loader">
@@ -573,38 +601,38 @@
 
         <div ng-if="user._id !== message.userId">
 
-          <img ng-click="viewProfile(message)" class="profile-pic left"
-               ng-src="" onerror="onProfilePicError(this)" />
+          <!--<img ng-click="viewProfile(message)" class="profile-pic left"
+               ng-src="" onerror="onProfilePicError(this)" />-->
 
           <div class="chat-bubble left">
 
             <div class="message" ng-bind-html="message.message | nl2br" autolinker>
             </div>
 
-            <div class="message-detail">
+            <!--<div class="message-detail">
                               <span ng-click="viewProfile(message)"
                                     class="bold">{{toUser.username}}</span>,
               <span am-time-ago="message.timestamp"></span>
-            </div>
+            </div>-->
 
           </div>
         </div>
 
         <div ng-if="user._id === message.userId">
 
-          <img ng-click="viewProfile(message)" class="profile-pic right"
-               ng-src="" onerror="onProfilePicError(this)" />
+          <!--<img ng-click="viewProfile(message)" class="profile-pic right"
+               ng-src="" onerror="onProfilePicError(this)" />-->
 
           <div class="chat-bubble right">
 
             <div class="message" ng-bind-html="message.message | nl2br" autolinker>
             </div>
 
-            <div class="message-detail">
+            <!--<div class="message-detail">
                               <span ng-click="viewProfile(message)"
                                     class="bold">{{user.username}}</span>,
               <span am-time-ago="message.timestamp"></span>
-            </div>
+            </div>-->
 
           </div>
 
@@ -632,7 +660,7 @@
 </script>
 
 <script id="popover.html" type="text/ng-template">
-  <ion-popover-view style="margin-top:  12px;">
+  <ion-popover-view class="event-options-popup" style="margin-top:  12px;margin-left: -50px;background-color: #20283D;">
     <ion-content>
       <div class="list">
         <a class="item item-icon-left" ng-click="checkout()">

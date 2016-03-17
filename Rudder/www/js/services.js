@@ -7,7 +7,7 @@ angular.module('services', [])
     var long, lat;
     var processing = false;
     var callback;
-    var minDistance = 200;
+    var minDistance = 15;
     var newLat, newLong;
 
     // Credit: http://stackoverflow.com/a/27943/52160
@@ -71,34 +71,46 @@ angular.module('services', [])
   })
 
 .factory('socket', function ($rootScope, SERVER_CONFIG) {
-  var socket = io.connect(SERVER_CONFIG.url);
+  var socket;
 
-  socket.on('connection', function (message) {
-    console.log('connnected', message);
-  });
+  var connect = function(){
+    if(typeof(io) !== 'undefined'){
+      socket = io.connect(SERVER_CONFIG.url);
 
-  socket.on('update checkin', function(message){
-    console.log('update checkin' ,message);
-  });
+      socket.on('connection', function (message) {
+        console.log('connnected', message);
+      });
+
+      socket.on('update checkin', function(message){
+        console.log('update checkin' ,message);
+      });
+    }
+  };
 
   return {
+    connect : connect,
     on: function (eventName, callback) {
-      socket.on(eventName, function () {
-        var args = arguments;
-        $rootScope.$apply(function () {
-          callback.apply(socket, args);
+      if(typeof(socket) !== 'undefined') {
+        socket.on(eventName, function () {
+          var args = arguments;
+          $rootScope.$apply(function () {
+            callback.apply(socket, args);
+          });
         });
-      });
+      }
     },
     emit: function (eventName, data, callback) {
-      socket.emit(eventName, data, function () {
-        var args = arguments;
-        $rootScope.$apply(function () {
-          if (callback) {
-            callback.apply(socket, args);
-          }
-        });
-      })
+      if(typeof(socket) !== 'undefined') {
+        socket.emit(eventName, data, function () {
+          console.log('emitted :', eventName);
+          var args = arguments;
+          $rootScope.$apply(function () {
+            if (callback) {
+              callback.apply(socket, args);
+            }
+          });
+        })
+      }
     }
   };
 })
@@ -107,11 +119,11 @@ angular.module('services', [])
     var joinChat = function(userId){
       var joinData = {userId : userId};
       socket.emit('join', joinData);
-    }
+    };
 
     var sendMessage = function(message){
       socket.emit('send message', message);
-    }
+    };
 
     return {
       joinChat : joinChat,
@@ -120,7 +132,7 @@ angular.module('services', [])
   })
 
   .service('LoginService', function ($http, $state, $q, $ionicLoading, TokenService, UserService,
-                                     EventsService, FriendsDataService, ProfileService, $cordovaGeolocation, socket, SERVER_CONFIG) {
+                                     EventsService, FriendsDataService, ProfileService, PushNotificationService, $cordovaGeolocation, socket, SERVER_CONFIG) {
 
     //This is to notify the server about the user.
     var createFbUser = function () {
@@ -163,6 +175,9 @@ angular.module('services', [])
                     var rudderData = {};
                     UserService.getRudderData().then(function(response) {
                       rudderData = response;
+
+                      socket.connect();
+
                       //start socket connection here
                       socket.emit('join', {
                         userId: rudderData.userId
@@ -186,6 +201,8 @@ angular.module('services', [])
                       FriendsDataService.setFriendsData(friends);
                     }
                   });
+
+                  PushNotificationService.registerPush();
 
 
                 });
@@ -223,6 +240,10 @@ angular.module('services', [])
         return;
       }
 
+      $ionicLoading.show({
+        template: '<ion-spinner icon="lines" class="spinner-royal"></ion-spinner>'
+      });
+
       var authResponse = response.authResponse;
 
       getFacebookProfileInfo(authResponse)
@@ -235,7 +256,7 @@ angular.module('services', [])
             email: profileInfo.email,
             picture : "http://graph.facebook.com/" + authResponse.userID + "/picture?type=large"
           }).then(function(response) {
-            $ionicLoading.hide();
+            //$ionicLoading.hide();
             //TODO :: Login success screen transition to be added here
 
             //Notify the server about the user login
@@ -357,9 +378,9 @@ angular.module('services', [])
           /*$ionicLoading.show({
             template: 'Logging in...'
           });*/
-          $ionicLoading.show({
+          /*$ionicLoading.show({
             template: '<ion-spinner icon="lines" class="spinner-royal"></ion-spinner>'
-          });
+          });*/
 
             //ask the permissions you need. You can learn more about FB permissions here: https://developers.facebook.com/docs/facebook-login/permissions/v2.4
             facebookConnectPlugin.login(['email', 'public_profile','user_friends'], fbLoginSuccess, fbLoginError);
@@ -376,6 +397,122 @@ angular.module('services', [])
 
     return {
       facebookSignIn : facebookSignIn
+    }
+  })
+
+  .service('RequestService', function($http, $q, $ionicLoading, UserService, SERVER_CONFIG){
+    var register = function(device_token){
+      var deferred = $q.defer();
+
+      console.log(device.platform);
+
+      UserService.getRudderData().then(function(response) {
+
+        //setting the headers to be passed
+        var config = {
+          headers : {
+            'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8;'
+          }
+        };
+
+        var params = {deviceId: device_token, platform: device.platform , userId : response.userId};
+
+        $http.post(SERVER_CONFIG.url+'/push/register', params)
+          .success(function (data, status, headers, config) {
+            console.log('register success');
+            deferred.resolve(response);
+          })
+          .error(function (data, status, header, config) {
+            console.log('register failure');
+            deferred.reject();
+          });
+
+      });
+
+
+      return deferred.promise;
+    };
+
+    return{
+      register: register
+    }
+
+  })
+
+  .service('PushNotificationService', function(RequestService, $state){
+    var registerPush = function(){
+
+      pushNotification = window.plugins.pushNotification;
+
+
+
+      window.onNotification = function(e){
+
+        switch(e.event){
+          case 'registered':
+            if(e.regid.length > 0){
+
+              var device_token = e.regid;
+              console.log('Device token is : ', device_token);
+              RequestService.register(device_token).then(function(response){
+                console.log('registered!');
+              });
+            }
+            break;
+
+          case 'message':
+            console.log('msg received: ', e);
+
+            /*$state.go('menu.tabs.chatList');
+            if(e.hasOwnProperty('payload'))
+            {
+              if(e.payload.hasOwnProperty('userId')) {
+                $state.go('menu.tabs.chat', {id: e.payload.userId});
+              }
+            }*/
+
+            /*
+             {
+             "message": "Hello this is a push notification",
+             "payload": {
+             "message": "Hello this is a push notification",
+             "sound": "notification",
+             "title": "New Message",
+             "from": "813xxxxxxx",
+             "collapse_key": "do_not_collapse",
+             "foreground": true,
+             "event": "message"
+             }
+             }
+             */
+            break;
+
+          case 'error':
+            alert('error occured');
+            break;
+
+        }
+      };
+
+      window.errorHandler = function(error){
+        alert('an error occured');
+      };
+
+      pushNotification.register(
+        onNotification,
+        errorHandler,
+        {
+          'badge': 'true',
+          'sound': 'true',
+          'alert': 'true',
+          'ecb': 'onNotification',
+          'senderID': '1081906559909',
+        }
+      );
+    };
+
+    return{
+      registerPush : registerPush
     }
   })
 
@@ -695,7 +832,7 @@ angular.module('services', [])
                 },
                 function (response) {
                   setTimeout(function() {
-                    deferred.resolve();
+                    deferred.reject();
                   }, 0);
                 });
             }
@@ -709,10 +846,12 @@ angular.module('services', [])
       return deferred.promise;
     };
 
-    var checkInEvent = function(placeId){
+    var checkInEvent = function(placeId, placeName){
 
       console.log('Attempting check in ');
       console.log('Place id is :', placeId);
+      console.log('placeName is :', placeName);
+
 
       //Show the loader till the check is complete or fails
       $ionicLoading.show({
@@ -793,7 +932,7 @@ angular.module('services', [])
                 if(data.hasOwnProperty('usersCheckedIn')){
                   EventGuestsDataService.setEventGuestsData(data.usersCheckedIn).then(function(){
                     //switch to event details screen , where checkedIn users list is displayed
-                    $state.go('menu.tabs.eventDetails');
+                    $state.go('menu.tabs.eventDetails',{placeName : placeName});
                   });
                 }
 
@@ -1142,6 +1281,7 @@ angular.module('services', [])
           if(data.hasOwnProperty('friends')){
             setTimeout(function() {
               deferred.resolve(setChatListData(data.friends));
+              /*deferred.resolve(chatList.$add(data.friends));*/
             }, 0);
           }
 

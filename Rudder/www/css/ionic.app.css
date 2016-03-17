@@ -5298,11 +5298,11 @@ ion-tabs.tabs-color-active-dark .tab-item {
 
 @media (min-width: 0px) {
   .modal {
-    top: 20%;
+    top: 50%;
     right: 0%;
     bottom: 0%;
     left: 0%;
-    min-height: 60%;
+    min-height: 10%;
     width: 100%; }
   .modal.ng-leave-active {
     bottom: 0; }
@@ -9732,14 +9732,14 @@ a.button {
   transition-duration: 0s; }
 
 .welcome-view {
-  background-color: #FF7258; }
+  background-color: #20283D; }
   .welcome-view .top-content {
-    height: 66%; }
+    height: 78%; }
     .welcome-view .top-content .app-copy {
       text-align: center;
       padding-top: 13vh; }
     .welcome-view .top-content .app-logo {
-      font-size: 60px;
+      font-size: 35px;
       font-family: sans-serif;
       font-weight: 600;
       color: #FFFFFF;
@@ -9751,13 +9751,48 @@ a.button {
       font-weight: 500;
       color: rgba(255, 255, 255, 0.95); }
   .welcome-view .bottom-content {
-    height: 34%; }
+    height: 22%;
+    background-color: #FFF;
+    text-align: center; }
+    .welcome-view .bottom-content .login-tagline {
+      font-size: 16px;
+      margin-top: 0px;
+      font-weight: 700;
+      color: #000000; }
     .welcome-view .bottom-content .facebook-sign-in {
       border-radius: 4px;
       font-weight: 500;
       color: #FFF;
       background-color: #294886;
       border-color: #27447e; }
+
+.discover-view .places-heading {
+  font-size: 14px;
+  padding-left: 10px;
+  color: #8c8c8c; }
+
+.discover-view .discover-places-list .item {
+  border: 0px;
+  width: 120%;
+  padding-bottom: 18px; }
+
+.discover-view .discover-places-list .item .item-name {
+  font-size: 17px;
+  width: 80%;
+  font-weight: 600; }
+
+.discover-view .discover-places-list .item .distance {
+  font-weight: 100; }
+
+.discover-view .discover-places-list .item .button {
+  padding-right: 10px;
+  padding-left: 10px;
+  top: 15px;
+  right: 0px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 15px;
+  text-align: center; }
 
 .item-avatar-center,
 .item-avatar-center .item-content {
