@@ -211,6 +211,10 @@ angular.module('controllers', [])
 
     });*/
 
+    $scope.retryPlaces = function(){
+      getNearbyPlaces();
+    };
+
     var getNearbyPlaces = function(){
 
       $ionicLoading.show({
@@ -265,6 +269,7 @@ angular.module('controllers', [])
             }
           }
           else if(!$scope.targetSet){
+            var options = {timeout:20000};
 
             navigator.geolocation.getCurrentPosition(function(position) {
               //set the target updated to false if computing for the first time.
@@ -295,8 +300,10 @@ angular.module('controllers', [])
               });
 
             },function(){
+              $ionicLoading.hide();
+              console.log('position error');
               $scope.posAvailable = false;
-            });
+            }, options);
 
             /*$cordovaGeolocation.getCurrentPosition(posOptions).then(function (position) {
               //set the target updated to false if computing for the first time.
@@ -344,12 +351,13 @@ angular.module('controllers', [])
     $scope.index = 0;
     $scope.hosts = [{hostName: 'Tousif'},{hostName: 'Ved'}, {hostName: 'Rakesh'}];
 
-    $scope.showPopupIfNotCheckedIn = function(index){
+    $scope.checkInEvent = function(index){
       console.log('In Checkin');
+      EventsService.checkInEvent($scope.items[index].id, $scope.items[index].name);
 
-      var rudderData = {};
+      //var rudderData = {};
 
-        UserService.getRudderData().then(function(response) {
+        /*UserService.getRudderData().then(function(response) {
           rudderData = response;
           console.log('rudderData at check in', rudderData);
         if(rudderData.hasOwnProperty('checkIn') && rudderData.checkIn.hasOwnProperty('status'))
@@ -369,7 +377,7 @@ angular.module('controllers', [])
         }
       }, function(response) {
 
-      });
+      });*/
 
 
       };
@@ -798,7 +806,7 @@ angular.module('controllers', [])
         EventGuestsDataService.getProfile($scope.item.userId).then(function(response){
           $scope.profileData = response;
           console.log($scope.profileData);
-
+          console.log('mutual friends length:',$scope.profileData.mutualFriends.length);
         });
 
       });
@@ -826,6 +834,8 @@ angular.module('controllers', [])
             else if($scope.dir === "right"){
               $scope.openModal($scope.lists[$scope.rowIndex][$scope.colIndex], $scope.colIndex, $scope.rowIndex, 'bounceInLeft');
             }
+
+
             $scope.dir = "default";
             $scope.toTransition = false;
           }

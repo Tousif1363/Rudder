@@ -339,7 +339,7 @@
 </script>
 
 <script id="discover.html" type="text/ng-template">
-  <ion-view view-title="" class="discover-view">
+  <ion-view view-title="" class="discover-view" ng-controller="EventsCtrl">
     <!--<ion-header-bar class="bar-royal bar-subheader item-input-inset" position-bars-and-content>-->
     <!--<label class="item-input-wrapper">-->
     <!--<i class="icon ion-ios-search placeholder-icon"></i>-->
@@ -348,12 +348,14 @@
     <!--</ion-header-bar>-->
     <ion-content class="padding has-header has-tabs-top">
       <h5 class="places-heading">Places Nearby Your Location</h5>
-      <div class="card" ng-if="posAvailable">
+      <div class="card" ng-if="!posAvailable">
         <div class="item item-text-wrap">
           Please enable location on your device.
         </div>
       </div>
-      <ion-list ng-controller="EventsCtrl" class="discover-places-list">
+      <button class="button button-block button-royal icon ion-android-refresh" ng-if="!posAvailable" ng-click="retryPlaces()">  Retry
+      </button>
+      <ion-list class="discover-places-list">
         <!--<i class="icon ion-beer" ng-if="jQuery.isEmptyObject($scope.items)"></i>-->
         <ion-item ng-repeat="item in items" class="item item-icon-left item-button-right" href="#">
           <i class="icon ion-android-restaurant"></i>
@@ -366,9 +368,9 @@
           <p class="item-name">{{item.name}}</p>
           <p class="distance" ng-bind="+item.distance.toFixed(2) + ' kms away'"></p>
           <!--<button class="button button-small button-assertive" ng-disabled="item.distance.toFixed(1) > 0.5"
-                  ng-click="showPopupIfNotCheckedIn($index)">CHECK IN</button>-->
+                  ng-click="checkInEvent($index)">CHECK IN</button>-->
           <button class="button button-small button-assertive" ng-disabled="item.distance.toFixed(2) > 0.05"
-                  ng-click="showPopupIfNotCheckedIn($index)">CHECK IN</button>
+                  ng-click="checkInEvent($index)">CHECK IN</button>
         </ion-item>
       </ion-list>
     </ion-content>
@@ -399,7 +401,7 @@
     </div>
     <div class="modal-body">
       <ion-list on-swipe-left="onSwipeLeft()" on-swipe-right="onSwipeRight()">
-        <ion-item class="item item-body">
+        <!--<ion-item class="item item-body">
           <div class="row">
             <a class="tab-item">
               <i class="icon ion-social-linkedin icon-change"></i>
@@ -429,28 +431,29 @@
             </button>
           </div>
 
-        </ion-item>
+        </ion-item>-->
         <ion-item>
-          <div class="">Common Connections</div>
-          <div class="row row-wrap">
+          <h2 class="">Common Connections</h2>
+          <div class="row row-wrap" ng-if="profileData.mutualFriends.length != 0">
             <div class="col col-10" ng-repeat="item in profileData.mutualFriends">
               <div class="card card-hosts margin-0">
                 <div class="item item-borderless item-avatar-center-small">
                   <img src="{{'http://graph.facebook.com/' + item.fbId + '/picture?type=small'}}" />
-                  <h2 ng-bind="item.name"></h2>
+                  <!--<h2 ng-bind="item.name"></h2>-->
                 </div>
               </div>
             </div>
           </div>
+          <div class="blank-fill-modal" ng-if="profileData.mutualFriends.length == 0">You have no common connections</div>
         </ion-item>
-        <ion-item>
+        <!--<ion-item>
           <div class="">Skills</div>
           <div class="row">
             <button class="button button-small button-light">UI/UX</button>
             <button class="button button-small button-light">Product Design</button>
             <button class="button button-small button-light">Wireframes</button>
           </div>
-        </ion-item>
+        </ion-item>-->
       </ion-list>
     </div>
   </ion-modal-view>
@@ -470,7 +473,13 @@
     </ion-header-bar>
     <ion-content class="padding">
       <h5 class="events-subheading">Users checked in</h5>
-      <div class="row row-wrap" ng-repeat="row in lists" ng-init="rowIndex = $index">
+      <!--<div class="card" ng-if="true">
+        <div class="item item-text-wrap">
+          You are the first one to checkin  <a class="button button-icon icon ion-social-rss"></a>
+        </div>
+      </div>-->
+      <a class="button icon-right ion-social-rss button-royal" ng-if="lists.length == 0">You are the first one to checkin</a>
+      <div ng-if="lists.length != 0" class="row row-wrap" ng-repeat="row in lists" ng-init="rowIndex = $index">
         <div class="col col-33" ng-repeat="list in row" ng-init="colIndex = $index" ng-click="openModal(list, colIndex, rowIndex, 'slideInUp')">
           <div class="card card-guests margin-0">
             <div class="item item-borderless item-avatar-center">
