@@ -658,7 +658,7 @@ angular.module('services', [])
     };
   })
 
-  .service('ProfileService', function($q, $http , TokenService, SERVER_CONFIG) {
+  .service('ProfileService', function($q, $http , TokenService, FriendsDataService, SERVER_CONFIG) {
 
     var setProfileData = function(profile_data) {
       var deferred = $q.defer();
@@ -750,12 +750,24 @@ angular.module('services', [])
 
             if(data.hasOwnProperty('success') && data.success === true) {
               if(data.hasOwnProperty('user')){
+                console.log('has property user');
+
                 setProfileData(data.user).then(function(response){
+                  if(data.user.hasOwnProperty('friends')){
+                    console.log('has property friends');
+
+                    console.log('friends : ',data.user.friends);
+                    FriendsDataService.setFriendsData(data.user.friends);
+                  }
+
+
                   deferred.resolve();
                 }, function(response){
                   deferred.resolve(response);
                 });
               }
+
+
             }
           })
           .error(function (data, status, header, config) {
@@ -1238,7 +1250,7 @@ angular.module('services', [])
     };
   })
 
-  .service('ChatListDataService', function($q , $http, $ionicLoading, TokenService, SERVER_CONFIG) {
+  .service('ChatListDataService', function($q , $http, $ionicLoading, TokenService, ProfileService, SERVER_CONFIG) {
 
     var setChatListData = function(chat_list_data) {
       var deferred = $q.defer();
@@ -1265,37 +1277,41 @@ angular.module('services', [])
 
       var token = {};
       var friendsData = {};
-      TokenService.getUserToken().then(function(response){
-        token = response;
+      ProfileService.refreshProfileData().then(function(response){
+        TokenService.getUserToken().then(function(response){
+          token = response;
 
-        console.log('chatListDataHelper token', token);
+          console.log('chatListDataHelper token', token);
 
-        var params = {ruderToken: token.ruderToken};
-        console.log('chatListDataHelper params', params);
+          var params = {ruderToken: token.ruderToken};
+          console.log('chatListDataHelper params', params);
 
-        console.log(params);
+          console.log(params);
 
-        $http.post(SERVER_CONFIG.url+'/friendlist', {ruderToken : token.ruderToken})
-          .success(function(data, status, headers, config) {
-            console.log('friendlist data success', data);
-          if(data.hasOwnProperty('friends')){
-            setTimeout(function() {
-              deferred.resolve(setChatListData(data.friends));
-              /*deferred.resolve(chatList.$add(data.friends));*/
-            }, 0);
-          }
+          $http.post(SERVER_CONFIG.url+'/friendlist', {ruderToken : token.ruderToken})
+            .success(function(data, status, headers, config) {
+              console.log('friendlist data success', data);
+              if(data.hasOwnProperty('friends')){
+                setTimeout(function() {
+                  console.log('FriendsData', data.friends);
+                  deferred.resolve(setChatListData(data.friends));
+                  /*deferred.resolve(chatList.$add(data.friends));*/
+                }, 0);
+              }
 
 
-          })
-          .error(function (data, status, header, config){
-            console.log('friendlist data failure', data);
+            })
+            .error(function (data, status, header, config){
+              console.log('friendlist data failure', data);
 
-            setTimeout(function() {
-              deferred.resolve();
-            }, 0);
+              setTimeout(function() {
+                deferred.resolve();
+              }, 0);
 
-          });
+            });
+        });
       });
+
 
       return deferred.promise;
     };

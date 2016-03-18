@@ -12,6 +12,7 @@ angular.module('starter', ['ionic', 'controllers', 'services','monospaced.elasti
     "port": ""
   })
 
+
   .run(function($ionicPlatform, $state, $rootScope, $cordovaGeolocation, UserService, ProfileService, socket) {
     $ionicPlatform.ready(function() {
       // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
@@ -83,6 +84,8 @@ angular.module('starter', ['ionic', 'controllers', 'services','monospaced.elasti
 
   .config(function($stateProvider, $urlRouterProvider, $ionicConfigProvider) {
     //$ionicConfigProvider.tabs.position("bottom");
+    /*$ionicConfigProvider..icon('new-notification-filled');*/
+
 
     $stateProvider
 

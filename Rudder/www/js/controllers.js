@@ -161,12 +161,25 @@ angular.module('controllers', [])
     });
 
     var showNotifications = function(){
-      ProfileService.getProfileData().then(function(response){
+
+      //Hack start
+      ProfileService.refreshProfileData().then(function(response){
+
+        ProfileService.getProfileData().then(function(response){
+          $scope.receivedRequests = response.receivedRequests;
+          console.log('get profile response:', response);
+          console.log('received requests:', $scope.receivedRequests);
+        });
+      });
+      //Hack complete
+
+      //Uncomment on hack remove
+      /*ProfileService.getProfileData().then(function(response){
         $scope.receivedRequests = response.receivedRequests;
         console.log('get profile response:', response);
         console.log('received requests:', $scope.receivedRequests);
 
-      });
+      });*/
     };
 
 
@@ -526,9 +539,12 @@ angular.module('controllers', [])
       });
     });
 
+    socket.on("receive request", function(message){
+      console.log('receive request in event', message);
+      modifyRelationOnRequestSent(message.userId, 'receivedRequest');
+    });
 
-
-    function modifyRelationOnRequestSent(userId){
+    function modifyRelationOnRequestSent(userId, relation){
       console.log($scope.lists);
       for(rowKey in $scope.lists){
         console.log('row', $scope.lists[rowKey]);
@@ -536,11 +552,11 @@ angular.module('controllers', [])
           console.log($scope.lists[rowKey][colKey]);
           if($scope.lists[rowKey][colKey].userId === userId){
             console.log('Match found');
-            $scope.lists[rowKey][colKey].relation = 'sentRequest'
+            $scope.lists[rowKey][colKey].relation = relation;
           }
         }
       }
-    };
+    }
 
 
     function getSize(obj) {
@@ -657,7 +673,7 @@ angular.module('controllers', [])
               // to server to notify the other user
               notifyServerSocketAddFriend(userId);
               // modify current realtionship
-              modifyRelationOnRequestSent(userId);
+              modifyRelationOnRequestSent(userId, 'sentRequest');
 
               if (data.hasOwnProperty('success') && data.success === true) {
 
@@ -805,7 +821,7 @@ angular.module('controllers', [])
         console.log('Item value',$scope.item);
         EventGuestsDataService.getProfile($scope.item.userId).then(function(response){
           $scope.profileData = response;
-          console.log($scope.profileData);
+          console.log($scope.profileData.relation);
           console.log('mutual friends length:',$scope.profileData.mutualFriends.length);
         });
 
@@ -891,6 +907,7 @@ angular.module('controllers', [])
 
     $scope.joinChat = function(id){
 
+      console.log('joinChat id:', id);
       $state.go('menu.tabs.chat',{id: id});
     };
   })
@@ -915,10 +932,11 @@ angular.module('controllers', [])
   })
 
   .controller('TabCtrl', function($scope, $state, $ionicLoading, ProfileService, socket){
-    $scope.notificationsAvailable = false;
+    /*$scope.notificationsAvailable = false;*/
     $scope.profileData = {};
     $scope.notifications = {};
     $scope.receivedRequests = {};
+    $scope.notificationIcon = "img/newNotification.png";
 
     $scope.$on('$ionicView.enter', function() {
       /*ProfileService.getProfileData().then(function(response){
@@ -944,8 +962,13 @@ angular.module('controllers', [])
       console.log('receive request received on tabCtrl');
 
       socket.on("receive request", function(message){
+        console.log('receive request', message);
         refreshProfile();
+        //Hack start
+        $scope.notificationsAvailable = true;
+        //Hack complete
       });
+
     }
 
     var refreshProfile = function(){
@@ -961,6 +984,9 @@ angular.module('controllers', [])
 
           if($scope.receivedRequests.length > 0){
             $scope.notificationsAvailable = true;
+          }
+          else{
+            $scope.notificationsAvailable = false;
           }
         });
 

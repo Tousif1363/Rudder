@@ -130,8 +130,10 @@
     <ion-nav-buttons side="right">
       <!--<button class="button button-icon button-clear ion-android-bicycle" ng-click="letsGo()"></button>-->
       <!--<button class="button button-icon button-clear ion-android-refresh" ng-click="refreshProfile()"></button>-->
+      <!--<button ng-src="{{notificationIcon}}"></button>-->
       <button ng-if="notificationsAvailable === false" class="button button-icon button-clear ion-android-notifications-none" ng-click="showNotifications()"></button>
-      <button ng-if="notificationsAvailable === true" class="button button-icon button-clear ion-android-notifications" ng-click="showNotifications()"></button>
+      <i ng-if="notificationsAvailable === true" class="button button-icon new-notification-filled" ng-click="showNotifications()"></i>
+      <!--<button ng-if="notificationsAvailable === true" class="button button-icon button-clear ion-android-notifications" ng-click="showNotifications()"></button>-->
     </ion-nav-buttons>
   </ion-nav-bar>
 
@@ -201,10 +203,17 @@
       <span>Notifications</span>
     </ion-nav-title>
     <ion-content class="">
-      <div class="list">
+      <div class="card" ng-if="receivedRequests.length == 0">
+        <div class="item item-text-wrap">
+          You have no new notifications
+        </div>
+      </div>
+      <div class="list" ng-if="receivedRequests.length != 0">
 
-        <div class="item item-button-right" ng-repeat="item in receivedRequests">
-          {{item.name + " has sent you a friend request"}}
+        <div class="item item-avatar item-button-right" ng-repeat="item in receivedRequests">
+          <img ng-src="{{'http://graph.facebook.com/' + item.fbId + '/picture?type=small'}}">
+          <h2 ng-bind="item.name + ' has sent you a friend request'"></h2>
+          <!--{{item.name + " has sent you a friend request"}}-->
           <button class="button button-positive" ng-click="acceptRequest(item.userId)">
             <i class="icon ion-android-done"></i>
           </button>
@@ -357,20 +366,21 @@
       </button>
       <ion-list class="discover-places-list">
         <!--<i class="icon ion-beer" ng-if="jQuery.isEmptyObject($scope.items)"></i>-->
-        <ion-item ng-repeat="item in items" class="item item-icon-left item-button-right" href="#">
-          <i class="icon ion-android-restaurant"></i>
+        <ion-item ng-repeat="item in items" class="item item-avatar item-button-right" href="#">
+          <img src="img/white_college.png">
+          <!--<i class="icon ion-android-restaurant"></i>
           <i class="icon ion-beer" ng-if="item.category === 'pub'"></i>
           <i class="icon ion-coffee" ng-if="item.category === 'cafe'"></i>
           <i class="icon ion-icecream" ng-if="item.category === 'ic'"></i>
           <i class="icon ion-ios-briefcase" ng-if="item.category === 'tech'"></i>
-          <i class="icon ion-android-restaurant" ng-if="item.category === 'restaurant'"></i>
+          <i class="icon ion-android-restaurant" ng-if="item.category === 'restaurant'"></i>-->
 
           <p class="item-name">{{item.name}}</p>
           <p class="distance" ng-bind="+item.distance.toFixed(2) + ' kms away'"></p>
-          <!--<button class="button button-small button-assertive" ng-disabled="item.distance.toFixed(1) > 0.5"
-                  ng-click="checkInEvent($index)">CHECK IN</button>-->
-          <button class="button button-small button-assertive" ng-disabled="item.distance.toFixed(2) > 0.05"
+          <button class="button button-small button-assertive" ng-disabled="item.distance.toFixed(1) > 0.5"
                   ng-click="checkInEvent($index)">CHECK IN</button>
+          <!--<button class="button button-small button-assertive" ng-disabled="item.distance.toFixed(2) > 0.05"
+                  ng-click="checkInEvent($index)">CHECK IN</button>-->
         </ion-item>
       </ion-list>
     </ion-content>
@@ -390,11 +400,11 @@
           <br><br><br><br>
           <h2>{{item.name}}</h2>
           <p>{{profileData.hyperPitch}}</p>
-              <img src="img/sendChatRequest.ico" class="header-person-add" style="height: 32px;width: 32px; " ng-if="item.relation === 'stranger'" ng-click="addFriend(item.userId)">
-              <img src="img/requestSent.png" class="header-person-add" style="height: 32px;width: 32px;" ng-if="item.relation === 'sentRequest'">
+              <img src="img/requestAdd.png" class="header-person-add" style="height: 32px;width: 32px; " ng-if="((item.relation === 'stranger') && (profileData.relation === 'stranger'))" ng-click="addFriend(item.userId)">
+              <img src="img/requestSent.png" class="header-person-add" style="height: 32px;width: 32px;" ng-if="((item.relation === 'sentRequest') && (profileData.relation !== 'friend'))">
               <img src="img/requestSent.png" class="header-person-add" style="height: 32px;width: 32px;" ng-if="item.relation === 'receivedRequest'">
 
-              <img src="img/requestAccepted.png" class="header-person-add" style="height: 32px;width: 32px;" ng-if="item.relation === 'friend'">
+              <img src="img/requestAccepted.png" class="header-person-add" style="height: 32px;width: 32px;" ng-if="((profileData.relation === 'friend') || (item.relation === 'friend'))  ">
         </div>
         <div class="clearfix"></div>
       </div>
@@ -539,7 +549,7 @@
 
 
 <script id="chatList.html" type="text/ng-template">
-  <ion-view view-title="">
+  <ion-view view-title="" class="chatList-view">
     <ion-content class="padding">
       <div class="list">
         <a class="item item-avatar" ng-repeat="item in chatList" ng-click="joinChat(item.userId)">

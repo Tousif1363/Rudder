@@ -589,6 +589,11 @@ img {
   background-color: green;
 }
 
+.new-notification-filled {
+  content: url('../img/newNotification.png');
+  width: 50px;
+}
+
 .event-options-popup{
   margin-top:  12px;
   height: 50px;
