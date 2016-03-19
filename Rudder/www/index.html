@@ -224,7 +224,7 @@
   </ion-view>
 </script>
 
-<script id="rudder.html" type="text/ng-template">
+<!--<script id="rudder.html" type="text/ng-template">
   <ion-view class="rudder-view" cache-view="false">
     <ion-content scroll="false">
       <div class="top-content row">
@@ -235,6 +235,14 @@
           </p>
         </div>
       </div>
+    </ion-content>
+  </ion-view>
+</script>-->
+
+<script id="rudder.html" type="text/ng-template">
+  <ion-view class="rudder-view" cache-view="false">
+    <ion-content scroll="false">
+      <img src="img/splash.png" class="rudder-splash">
     </ion-content>
   </ion-view>
 </script>
@@ -377,10 +385,10 @@
 
           <p class="item-name">{{item.name}}</p>
           <p class="distance" ng-bind="+item.distance.toFixed(2) + ' kms away'"></p>
-          <button class="button button-small button-assertive" ng-disabled="item.distance.toFixed(1) > 0.5"
-                  ng-click="checkInEvent($index)">CHECK IN</button>
-          <!--<button class="button button-small button-assertive" ng-disabled="item.distance.toFixed(2) > 0.05"
+          <!--<button class="button button-small button-assertive" ng-disabled="item.distance.toFixed(1) > 0.5"
                   ng-click="checkInEvent($index)">CHECK IN</button>-->
+          <button class="button button-small button-assertive" ng-disabled="item.distance.toFixed(2) > 0.05"
+                  ng-click="checkInEvent($index)">CHECK IN</button>
         </ion-item>
       </ion-list>
     </ion-content>

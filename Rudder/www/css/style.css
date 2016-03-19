@@ -516,9 +516,11 @@ a.autolinker {
   color: #8c8c8c;
 }
 
-img {
+/*img {
   background: url('../img/placholder.ico') no-repeat;
-}
+}*/
+
+
 
 .blank-fill-modal{
   padding-top: 10px;
@@ -551,6 +553,15 @@ img {
   /*overflow-y: hidden;*/
 }
 
+/*.item-avatar-center-big img{
+  position: absolute;
+  height: 100px;
+  width: 100px;
+  border-radius: 50%;
+  margin-top: -10px;
+  margin-left: calc(50% - 69px);
+}*/
+
 .item-avatar-container {
   position: absolute;
   max-width: 120px;
@@ -567,7 +578,14 @@ img {
   border-color : #D3D3D3;
 }
 
+.item-avatar-center-big img {
+  background: url('../img/placholder.ico') no-repeat;
+  background-size: 80px 80px;
+}
+
 .item-avatar-container img {
+  background: url('../img/placholder.ico') no-repeat;
+  background-size: 100px 100px;
   position: absolute;
   height: 100px;
   width: 100px;
@@ -629,6 +647,11 @@ img {
   color: #FFF;
   background-color: #294886;
   border-color: #27447e; }
+
+.rudder-splash{
+  height: 100%;
+  width: 100%;
+}
 
 /* Modal animations */
 .animated.modal.bounceIn.ng-leave {
