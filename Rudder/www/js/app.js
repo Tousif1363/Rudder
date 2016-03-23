@@ -54,7 +54,6 @@ angular.module('starter', ['ionic', 'controllers', 'services','monospaced.elasti
       $rootScope.$on('$cordovaNetwork:online', function(event, networkState){
         console.log('now online');
         reloadJs("http://188.166.244.93/socket.io/socket.io.js");
-        socket.connect();
       });
 
       // listen for Offline event

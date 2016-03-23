@@ -69,7 +69,7 @@ angular.module('services', [])
     };
 
   })
-
+/*
 .factory('socket', function ($rootScope, SERVER_CONFIG) {
   var socket;
 
@@ -115,14 +115,87 @@ angular.module('services', [])
   };
 })
 
+  */
+
+
+  .factory('socket', function (socketFactory, SERVER_CONFIG, SocketHelperService) {
+    var myIoSocket, mySocket;
+
+    if(typeof(io) !== 'undefined') {
+      console.log('io defined');
+      myIoSocket = io.connect(SERVER_CONFIG.url, {
+        'reconnection delay': 1000,
+        'reconnection limit': 1000,
+        'max reconnection attempts': 'Infinity'
+      });
+    }
+
+    mySocket = socketFactory({
+      ioSocket: myIoSocket
+    });
+
+    console.log('mySocket', mySocket);
+
+    if(typeof(mySocket) !== 'undefined') {
+      mySocket.on('connect', function (message) {
+        console.log('connected');
+      });
+
+      mySocket.on('reconnect', function (message) {
+        console.log('reconnected');
+        SocketHelperService.join();
+      });
+
+    }
+
+
+    return mySocket;
+  })
+
+  .service('SocketHelperService', function (SocketImplService) {
+    var join =function () {
+      SocketImplService.join();
+    };
+    
+    return{
+      join: join
+    }
+  })
+
+  .service('SocketImplService', function (socket, UserService) {
+    var join = function () {
+      UserService.getRudderData().then(function(response) {
+        var rudderData = response;
+
+        //start socket connection here
+        mySocket.emit('join', {userId: rudderData.userId}, function (result) {
+          if (!result) {
+            console.log('There was an error joining user');
+          } else {
+            console.log("User joined");
+          }
+        });
+        console.log('Join emitted');
+      });
+    };
+
+    return{
+      join : join
+    }
+  })
+
   .service('ChatService',function(socket){
     var joinChat = function(userId){
-      var joinData = {userId : userId};
-      socket.emit('join', joinData);
+      if(typeof(socket) !== 'undefined') {
+        var joinData = {userId : userId};
+        socket.emit('join', joinData);
+      }
     };
 
     var sendMessage = function(message){
-      socket.emit('send message', message);
+      if(typeof(socket) !== 'undefined') {
+        socket.emit('send message', message);
+      }
     };
 
     return {
@@ -132,7 +205,7 @@ angular.module('services', [])
   })
 
   .service('LoginService', function ($http, $state, $q, $ionicLoading, TokenService, UserService,
-                                     EventsService, FriendsDataService, ProfileService, PushNotificationService, $cordovaGeolocation, socket, SERVER_CONFIG) {
+                                     EventsService, FriendsDataService, ProfileService, PushNotificationService, $cordovaGeolocation, socket, SERVER_CONFIG, SocketImplService) {
 
     //This is to notify the server about the user.
     var createFbUser = function () {
@@ -173,26 +246,11 @@ angular.module('services', [])
 
                   UserService.setRudderData(data).then(function(){
                     var rudderData = {};
-                    UserService.getRudderData().then(function(response) {
-                      rudderData = response;
 
-                      socket.connect();
+                    $ionicLoading.hide();
+                    $state.go('menu.tabs.discover');
 
-                      //start socket connection here
-                      socket.emit('join', {
-                        userId: rudderData.userId
-                      }, function (result) {
-                        if (!result) {
-                          console.log('There was an error joining user');
-                        } else {
-                          console.log("User joined");
-                        }
-                      });
-                      console.log('Join emitted');
-                      $ionicLoading.hide();
-
-                      $state.go('menu.tabs.discover');
-                    });
+                    SocketImplService.join();
 
 
 
