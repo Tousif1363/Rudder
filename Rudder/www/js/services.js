@@ -169,7 +169,7 @@ angular.module('services', [])
         var rudderData = response;
 
         //start socket connection here
-        mySocket.emit('join', {userId: rudderData.userId}, function (result) {
+        socket.emit('join', {userId: rudderData.userId}, function (result) {
           if (!result) {
             console.log('There was an error joining user');
           } else {
@@ -498,7 +498,7 @@ angular.module('services', [])
 
   })
 
-  .service('PushNotificationService', function(RequestService, $state){
+  .service('PushNotificationService', function(RequestService){
     var registerPush = function(){
 
       pushNotification = window.plugins.pushNotification;
@@ -547,14 +547,14 @@ angular.module('services', [])
             break;
 
           case 'error':
-            alert('error occured');
+            console.log('error occured');
             break;
 
         }
       };
 
       window.errorHandler = function(error){
-        alert('an error occured');
+        console.log('an error occured', error);
       };
 
       pushNotification.register(
@@ -565,7 +565,7 @@ angular.module('services', [])
           'sound': 'true',
           'alert': 'true',
           'ecb': 'onNotification',
-          'senderID': '1081906559909',
+          'senderID': '1081906559909'
         }
       );
     };
