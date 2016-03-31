@@ -118,7 +118,7 @@ angular.module('services', [])
   */
 
 
-  .factory('socket', function (socketFactory, SERVER_CONFIG, SocketHelperService) {
+  .factory('socket', function (socketFactory, SERVER_CONFIG, UserService) {
     var myIoSocket, mySocket;
 
     if(typeof(io) !== 'undefined') {
@@ -143,26 +143,27 @@ angular.module('services', [])
 
       mySocket.on('reconnect', function (message) {
         console.log('reconnected');
-        SocketHelperService.join();
+        UserService.getRudderData().then(function(response) {
+          var rudderData = response;
+
+          //start socket connection here
+          mySocket.emit('join', {userId: rudderData.userId}, function (result) {
+            if (!result) {
+              console.log('There was an error joining user');
+            } else {
+              console.log("User joined");
+            }
+          });
+          console.log('Join emitted');
+        });
       });
 
     }
 
-
     return mySocket;
   })
 
-  .service('SocketHelperService', function (SocketImplService) {
-    var join =function () {
-      SocketImplService.join();
-    };
-    
-    return{
-      join: join
-    }
-  })
-
-  .service('SocketImplService', function (UserService) {
+  .service('SocketImplService', function (socket, UserService) {
     var join = function () {
       UserService.getRudderData().then(function(response) {
         var rudderData = response;
