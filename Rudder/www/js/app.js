@@ -3,9 +3,17 @@
 // angular.module is a global place for creating, registering and retrieving Angular modules
 // 'starter' is the name of this angular module example (also set in a <body> attribute in index.html)
 // the 2nd parameter is an array of 'requires'
-angular.module('starter', ['ionic', 'controllers', 'services','monospaced.elastic', 'angularMoment', 'ngCordova', 'btford.socket-io'])
+angular.module('starter', ['ionic', 'controllers', 'services','monospaced.elastic', 'angularMoment', 'ngCordova', 'btford.socket-io', 'ng-mfb', 'pouchdb'])
 
-  .run(function($ionicPlatform, $state, $rootScope, UserService, EventsService) {
+  //http://188.166.244.93
+  //http://192.168.0.116:8080
+  .constant("SERVER_CONFIG", {
+    "url": "http://188.166.244.93",
+    "port": ""
+  })
+
+
+  .run(function($ionicPlatform, $state, $rootScope, $cordovaGeolocation, UserService, ProfileService, socket) {
     $ionicPlatform.ready(function() {
       // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
       // for form inputs)
@@ -30,17 +38,34 @@ angular.module('starter', ['ionic', 'controllers', 'services','monospaced.elasti
         }
       }
 
-      //$rootScope.$on('$stateChangeSuccess', function (event, toState, toParams, fromState, fromParams) {
-      //  console.log('State change success');
-      //  console.log(toState);
-      //  if(toState.name === 'menu.tabs.discover'){
-      //    EventsService.getNearbyPlaces();
-      //    console.log('Discover events page');
-      //
-      //  }
-      //})
+      if(typeof(socket) !== 'undefined') {
+        socket.on("receive request", function(message){
+          console.log('receive request received on run');
+          ProfileService.refreshProfileData();
+        });
+      }
+
+      function reloadJs(src) {
+        src = $('script[src$="' + src + '"]').attr("src");
+        $('script[src$="' + src + '"]').remove();
+        $('<script/>').attr('src', src).appendTo('body');
+      }
+
+      $rootScope.$on('$cordovaNetwork:online', function(event, networkState){
+        console.log('now online');
+        reloadJs("http://188.166.244.93/socket.io/socket.io.js");
+      });
+
+      // listen for Offline event
+      $rootScope.$on('$cordovaNetwork:offline', function(event, networkState){
+        console.log('now offline');
+
+      });
+
 
     });
+
+
 
     if(UserService.getUser() !== null){
       $state.go('rudder');
@@ -51,10 +76,15 @@ angular.module('starter', ['ionic', 'controllers', 'services','monospaced.elasti
     }
     //$state.go('menu.tabs.discover');
 
+
+
+
   })
 
   .config(function($stateProvider, $urlRouterProvider, $ionicConfigProvider) {
-    $//ionicConfigProvider.tabs.position("bottom");
+    //$ionicConfigProvider.tabs.position("bottom");
+    /*$ionicConfigProvider..icon('new-notification-filled');*/
+
 
     $stateProvider
 
@@ -71,12 +101,39 @@ angular.module('starter', ['ionic', 'controllers', 'services','monospaced.elasti
         controller: 'RudderCtrl'
       })
 
+      .state('menu.notifications', {
+        url: '/notifications',
+        views: {
+          'menuContent': {
+            templateUrl: "notifications.html",
+            controller: 'NotificationCtrl'
+          }
+        }
+      })
+
       .state('welcome', {
         url: '/welcome',
         templateUrl: "welcome.html",
         controller: 'WelcomeCtrl'
       })
 
+      .state('plan', {
+        url: '/plan',
+        templateUrl: "plan.html",
+        controller: 'PlannerCtrl'
+      })
+
+      .state('plannerList', {
+        url: "/plannerList/:category",
+        templateUrl: "plannerList.html",
+        controller: 'PlannerListCtrl'
+      })
+
+      .state('inviteFriends', {
+        url: "/inviteFriends/:category/:placeId",
+        templateUrl: "inviteFriends.html",
+        controller: 'InviteFriendsCtrl'
+      })
 
 
       .state('menu.home', {
@@ -94,7 +151,8 @@ angular.module('starter', ['ionic', 'controllers', 'services','monospaced.elasti
         url: "/tabs",
         views: {
           'menuContent' :{
-            templateUrl: "tabs.html"
+            templateUrl: "tabs.html",
+            controller: 'TabCtrl'
           }
         }
       })
@@ -107,7 +165,7 @@ angular.module('starter', ['ionic', 'controllers', 'services','monospaced.elasti
         }
       })
       .state('menu.tabs.eventDetails', {
-        url: "/eventDetails",
+        url: "/eventDetails/:placeName",
         views: {
           'discover-tab' :{
             templateUrl: "eventDetails.html",

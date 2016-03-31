@@ -4,7 +4,7 @@
 
   .top-content
   {
-    height: 66%;
+    height: 78%;
 
     .app-copy
     {
@@ -14,7 +14,7 @@
 
     .app-logo
     {
-      font-size: 60px;
+      font-size: 35px;
       font-family: sans-serif;
       font-weight: 600;
       color: $welcome-color;
@@ -33,7 +33,15 @@
 
   .bottom-content
   {
-    height: 34%;
+    height: 22%;
+    background-color: #FFF;
+    text-align: center;
+
+    .login-tagline {
+      font-size: 16px;
+      margin-top: 0px;
+      font-weight: 700;
+      color: #000000; }
 
     .facebook-sign-in
     {

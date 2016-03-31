@@ -4,6 +4,106 @@
 /* optionally set a max-height */
 /* maxlength on the textarea will prevent /*
 /* it from getting too large also */
+.pac-container {
+  background-color: #fff;
+  position: absolute !important;
+  z-index: 1000;
+  border-radius: 2px;
+  border-top: 1px solid #d9d9d9;
+  font-family: Arial, sans-serif;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+  overflow: hidden
+}
+
+.pac-container:after {
+  content: "";
+  padding: 1px 1px 1px 0;
+  height: 16px;
+  text-align: right;
+  display: block;
+  background-image: url(//maps.gstatic.com/mapfiles/api-3/images/powered-by-google-on-white2.png);
+  background-position: right;
+  background-repeat: no-repeat;
+  background-size: 104px 16px
+}
+
+.hdpi.pac-container:after {
+  background-image: url(//maps.gstatic.com/mapfiles/api-3/images/powered-by-google-on-white2_hdpi.png)
+}
+
+.pac-item {
+  cursor: default;
+  padding: 0 4px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  line-height: 50px;
+  text-align: left;
+  border-top: 1px solid #e6e6e6;
+  font-size: 11px;
+  color: #999
+}
+
+.pac-item:hover {
+  background-color: #fafafa
+}
+
+.pac-item-selected, .pac-item-selected:hover {
+  background-color: #ebf2fe
+}
+
+.pac-matched {
+  font-weight: 700
+}
+
+.pac-item-query {
+  font-size: 13px;
+  padding-right: 3px;
+  color: #000
+}
+
+.pac-icon {
+  width: 15px;
+  height: 20px;
+  margin-right: 7px;
+  margin-top: 6px;
+  display: inline-block;
+  vertical-align: top;
+  background-image: url(//maps.gstatic.com/mapfiles/api-3/images/autocomplete-icons.png);
+  background-size: 34px
+}
+
+.hdpi .pac-icon {
+  background-image: url(//maps.gstatic.com/mapfiles/api-3/images/autocomplete-icons_hdpi.png)
+}
+
+.pac-icon-search {
+  background-position: -1px -1px
+}
+
+.pac-item-selected .pac-icon-search {
+  background-position: -18px -1px
+}
+
+.pac-icon-marker {
+  background-position: -1px -161px
+}
+
+.pac-item-selected .pac-icon-marker {
+  background-position: -18px -161px
+}
+
+.pac-placeholder {
+  color: gray
+}
+
+.custom-prediction-label {
+  font-style: italic;
+}
+
 .bar-footer {
   overflow: visible !important;
 }
@@ -96,7 +196,7 @@ img.profile-pic.right {
 .chat-bubble.left {
   background-color: #e6e5eb;
   float: left;
-  margin-left: 55px;
+  margin-left: 5px;
 }
 
 .chat-bubble.left:before {
@@ -106,15 +206,15 @@ img.profile-pic.right {
 }
 
 .chat-bubble.right {
-  /*background-color: #e6e5eb;*/
-  background-color: #158ffe;
-  color: #fff;
+  background-color: #e6e5eb;
+  /*background-color: #158ffe;*/
+  color: #000;
   float: right;
-  margin-right: 55px;
+  margin-right: 5px;
 }
 
 .chat-bubble.right:before {
-  background-color: #158ffe;
+  background-color: #e6e5eb;
   right: 10px;
   -webkit-transform: rotate(118deg) skew(-5deg);
 }
@@ -220,8 +320,13 @@ a.autolinker {
 
 /* Class Groups */
 .card-guests-detail {
-  border-radius: 6px;
+  float: left;
+  width: 100%;
+  height: 280px;
   box-shadow: 0px 0px 0px rgba(0,0,0,0);
+}
+.card-guests-detail .item {
+  height: 100%;
 }
 
 .card-guests-detail h2 {
@@ -242,6 +347,10 @@ a.autolinker {
   font-weight: 300;
   border-top: 1px solid #F3F3F3;
   background-color: #FAFAFA;
+}
+
+.card-guests-detail .item {
+  padding: 0;
 }
 
 .card-guests {
@@ -395,22 +504,94 @@ a.autolinker {
 .custom-placeholder{
   background: #FFFFFF;
   z-index: -1;
-  margin: -50px -20px -20px -20px;
-  padding-bottom: 20px;
+  width: 100%;
+  height: 160px;
+  position: relative;
 }
 
 
-
-.modal{
-  display: block !important;
+.custom-placeholder p{
+  font-size: 14px;
+  padding-left: 10px;
+  color: #8c8c8c;
 }
 
+/*img {
+  background: url('../img/placholder.ico') no-repeat;
+}*/
+
+
+
+.blank-fill-modal{
+  padding-top: 10px;
+  padding-bottom: 40px;
+  font-size: 14px;
+  color: #000000;
+}
+
+.events-subheading{
+  font-size: 14px;
+  padding-left: 10px;
+  color: #8c8c8c;
+}
+
+.header-person-add {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  top: 0;
+  left: calc(100% - 50px);
+}
 .modal-dialog{
-  overflow-y: initial !important
+  /*overflow-y: hidden !important;*/
 }
 .modal-body{
-  height: auto;
-  overflow-y: scroll;
+  height: 90px;
+  float: left;
+  width: 100%;
+  margin-top: -2px;
+  /*overflow-y: hidden;*/
+}
+
+/*.item-avatar-center-big img{
+  position: absolute;
+  height: 100px;
+  width: 100px;
+  border-radius: 50%;
+  margin-top: -10px;
+  margin-left: calc(50% - 69px);
+}*/
+
+.item-avatar-container {
+  position: absolute;
+  max-width: 120px;
+  max-height: 120px;
+  margin-top: 60px;
+  margin-left: calc(50% - 60px);
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  display: block;
+  padding: 20px;
+  background: #ffffff;
+  border: 1px solid;
+  border-color : #D3D3D3;
+}
+
+.item-avatar-center-big img {
+  background: url('../img/placholder.ico') no-repeat;
+  background-size: 80px 80px;
+}
+
+.item-avatar-container img {
+  background: url('../img/placholder.ico') no-repeat;
+  background-size: 100px 100px;
+  position: absolute;
+  height: 100px;
+  width: 100px;
+  border-radius: 50%;
+  margin-top: -10px;
+  margin-left: calc(50% - 69px);
 }
 
 .icon-friend-request{
@@ -424,6 +605,18 @@ a.autolinker {
 .icon-friend-request.button.active, .icon-friend-request.button.activated {
   border-color: green;
   background-color: green;
+}
+
+.new-notification-filled {
+  content: url('../img/newNotification.png');
+  width: 50px;
+}
+
+.event-options-popup{
+  margin-top:  12px;
+  height: 50px;
+  margin-left: -50px;
+  background-color: #20283D;
 }
 
 /* Rudder Splash CSS */
@@ -454,6 +647,11 @@ a.autolinker {
   color: #FFF;
   background-color: #294886;
   border-color: #27447e; }
+
+.rudder-splash{
+  height: 100%;
+  width: 100%;
+}
 
 /* Modal animations */
 .animated.modal.bounceIn.ng-leave {
