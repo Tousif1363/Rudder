@@ -1589,5 +1589,3 @@ moment.locale('en', {
     yy: "%d years"
   }
 });
-
-;

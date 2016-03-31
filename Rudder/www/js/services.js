@@ -162,7 +162,7 @@ angular.module('services', [])
     }
   })
 
-  .service('SocketImplService', function (socket, UserService) {
+  .service('SocketImplService', function (UserService) {
     var join = function () {
       UserService.getRudderData().then(function(response) {
         var rudderData = response;
